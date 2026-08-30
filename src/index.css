@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@layer utilities {
+  @media print {
+    /* Hide everything on page except #print-area */
+    body {
+      background: #fff !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body * {
+      visibility: hidden !important;
+    }
+
+    #print-area,
+    #print-area * {
+      visibility: visible !important;
+    }
+
+    #print-area {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: 'Times New Roman', Times, serif, system-ui, sans-serif !important;
+      font-size: 12.5pt !important;
+      line-height: 1.35 !important;
+      display: block !important;
+      box-sizing: border-box !important;
+    }
+
+    .print-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+    }
+
+    .print-table th,
+    .print-table td {
+      border: 1px solid #000000 !important;
+      padding: 4px 6px !important;
+      color: #000000 !important;
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 2cm 1.5cm 2cm 3cm; /* Căn lề: Top 2.0cm, Right 1.5cm, Bottom 2.0cm, Left 3.0cm */
+      @top-center {
+        content: counter(page);
+        font-size: 11pt;
+        font-family: "Times New Roman", serif;
+      }
+    }
+
+    @page :first {
+      @top-center {
+        content: ""; /* Trang đầu tiên để trống, không hiển thị số 1 */
+      }
+    }
+  }
+}

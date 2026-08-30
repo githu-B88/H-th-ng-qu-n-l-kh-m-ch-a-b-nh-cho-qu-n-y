@@ -1,0 +1,6 @@
+{
+  "name": "Hệ thống quản lý khám, chữa bệnh tại đơn vị quân y",
+  "description": "Hệ thống quản lý khám, chữa bệnh, y bạ và cấp phát thuốc tại đơn vị quân y chạy offline với SQLite cục bộ.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
