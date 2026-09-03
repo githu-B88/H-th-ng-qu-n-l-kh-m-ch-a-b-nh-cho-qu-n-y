@@ -90,7 +90,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
       <style>{`
         @page {
           size: A4 landscape;
-          margin: 1.8cm 1.5cm 1.2cm 2.5cm;
+          margin: 1.8cm 1.5cm 1.1cm 2.5cm;
           @top-center {
             content: counter(page);
             font-size: 11pt;
@@ -336,13 +336,13 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
         <span className="font-bold italic">{tongTienBangChu}</span>
       </div>
 
-      {/* PHẦN 5: CHỮ KÝ (FOOTER) - 60pt KHOẢNG TRỐNG CHỮ KÝ - Giảm khoảng trống trên 3px */}
+      {/* PHẦN 5: CHỮ KÝ (FOOTER) - 60pt KHOẢNG TRỐNG CHỮ KÝ - Giảm khoảng trống trên 5px theo yêu cầu */}
       <div
         className="text-[12pt] leading-normal"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginTop: '18px',
+          marginTop: '13px',
           pageBreakInside: 'avoid'
         }}
       >

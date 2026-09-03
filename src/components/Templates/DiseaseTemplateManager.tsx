@@ -13,6 +13,7 @@ import {
   Syringe,
   FileText,
   RotateCcw,
+  RefreshCw,
   AlertTriangle,
   Info
 } from 'lucide-react';
@@ -48,10 +49,31 @@ export const DiseaseTemplateManager: React.FC = () => {
   };
 
   useEffect(() => {
+    // Tự động chạy đồng bộ UPDATE mau_benh SET chan_doan_chuan = ten_benh cho tất cả bản ghi hiện có
+    sqliteService.syncChanDoanMauBenh();
     loadData();
     const unsub = sqliteService.subscribe(loadData);
     return unsub;
   }, []);
+
+  const handleSyncChanDoan = () => {
+    const res = sqliteService.syncChanDoanMauBenh();
+    if (res.success) {
+      setSeedNotification({
+        type: 'success',
+        message: `Đã cập nhật đồng bộ thành công Chẩn đoán chuẩn = Tên mẫu bệnh cho toàn bộ ${res.count} mẫu bệnh trong cơ sở dữ liệu SQLite!`
+      });
+    } else {
+      setSeedNotification({
+        type: 'error',
+        message: 'Có lỗi xảy ra khi đồng bộ chẩn đoán mẫu bệnh.'
+      });
+    }
+    loadData();
+    setTimeout(() => {
+      setSeedNotification(null);
+    }, 5000);
+  };
 
   const handleSeed53Templates = async () => {
     setIsSeeding(true);
@@ -255,6 +277,15 @@ export const DiseaseTemplateManager: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSyncChanDoan}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            title="Chạy lệnh SQL UPDATE mau_benh SET chan_doan_chuan = ten_benh để đồng bộ tất cả bản ghi cũ"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Đồng Bộ Chẩn Đoán = Tên Bệnh</span>
+          </button>
+
           <button
             onClick={() => setIsResetConfirmOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs transition-colors"

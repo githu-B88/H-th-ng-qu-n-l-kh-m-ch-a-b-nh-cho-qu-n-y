@@ -50,7 +50,7 @@
 
     @page {
       size: A4 landscape;
-      margin: 2cm 1.5cm 2cm 3cm; /* Căn lề: Top 2.0cm, Right 1.5cm, Bottom 2.0cm, Left 3.0cm */
+      margin: 1.8cm 1.5cm 1.1cm 2.5cm; /* Căn lề chuẩn: Top 1.8cm, Right 1.5cm, Bottom 1.1cm, Left 2.5cm */
       @top-center {
         content: counter(page);
         font-size: 11pt;

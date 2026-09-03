@@ -304,7 +304,8 @@ class SqliteService {
           this.db.run("UPDATE can_bo SET ma_the_bhyt = NULL WHERE ma_the_bhyt IS NOT NULL AND ma_the_bhyt NOT IN (SELECT ma_the_bhyt FROM the_bhyt);");
           this.db.run("UPDATE ho_so_kham SET id_mau_benh = NULL WHERE id_mau_benh IS NOT NULL AND id_mau_benh NOT IN (SELECT id FROM mau_benh);");
           this.db.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si IS NOT NULL AND id_bac_si NOT IN (SELECT id FROM bac_si);");
-          this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh WHERE chan_doan_chuan IS NULL OR chan_doan_chuan = '';");
+          // Đồng bộ triệt để chan_doan_chuan = ten_benh cho tất cả bản ghi mẫu bệnh cũ hiện có
+          this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh;");
 
           this.db.run("PRAGMA foreign_keys = ON;");
         } catch (e) {
@@ -1425,8 +1426,27 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   }
 
   // ===================== CRUD MAU BENH (DISEASE TEMPLATES) =====================
+  public syncChanDoanMauBenh(): { success: boolean; count: number } {
+    if (!this.db) return { success: false, count: 0 };
+    try {
+      this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh;");
+      this.persistDatabase();
+      const res = this.query<{ count: number }>("SELECT COUNT(*) as count FROM mau_benh;");
+      const total = res.length > 0 ? Number(res[0].count) : 0;
+      return { success: true, count: total };
+    } catch (e) {
+      console.error("Lỗi khi chạy lệnh UPDATE mau_benh SET chan_doan_chuan = ten_benh:", e);
+      return { success: false, count: 0 };
+    }
+  }
+
   public getMauBenhList(): MauBenh[] {
     if (!this.db) return [];
+    try {
+      this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh WHERE chan_doan_chuan IS NULL OR chan_doan_chuan != ten_benh;");
+    } catch (e) {
+      console.warn("Auto-sync chan_doan_chuan in getMauBenhList note:", e);
+    }
     const list = this.query<MauBenh>("SELECT * FROM mau_benh ORDER BY id ASC");
     if (list.length === 0) return [];
 
@@ -1747,7 +1767,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
       for (const tpl of (defaultData.mau_benh as any[])) {
         const cleanTenBenh = (tpl.ten_benh || '').replace(/;+\s*$/, '').trim();
-        const cleanChanDoan = (tpl.chan_doan_chuan && tpl.chan_doan_chuan.trim()) ? tpl.chan_doan_chuan.trim() : cleanTenBenh;
+        const cleanChanDoan = cleanTenBenh;
         this.db.run(
           `INSERT INTO mau_benh (ten_benh, chan_doan_chuan, loi_dan_mac_dinh, ghi_chu)
            VALUES (?, ?, ?, ?)`,
@@ -1896,6 +1916,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
           items: mappedItems
         });
       }
+
+      // Đảm bảo cập nhật 100% chan_doan_chuan = ten_benh
+      this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh;");
 
       this.db.run("PRAGMA foreign_keys = ON;");
       return {
