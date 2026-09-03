@@ -1,0 +1,2262 @@
+{
+  "version": "1.0.0",
+  "description": "Dữ liệu gốc mặc định (Chỉ đọc) - Gồm 34 thuốc, 4 vật tư, 3 dịch vụ kỹ thuật, 53 mẫu bệnh",
+  "thuoc": [
+    {
+      "ten": "Amoxilin 500 mg",
+      "dvt": "Viên",
+      "gia": 2000,
+      "ton_kho": 500,
+      "ham_luong": "500mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Alphachymotrypsin Choay 21microka",
+      "dvt": "Viên",
+      "gia": 2400,
+      "ton_kho": 500,
+      "ham_luong": "21 microkatal",
+      "cach_dung": "Ngậm dưới lưỡi hoặc uống"
+    },
+    {
+      "ten": "Acyclovir 800mg",
+      "dvt": "Viên",
+      "gia": 3500,
+      "ton_kho": 500,
+      "ham_luong": "800mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Enterogermina",
+      "dvt": "Gói",
+      "gia": 8500,
+      "ton_kho": 500,
+      "ham_luong": "2 tỷ bào tử",
+      "cach_dung": "Uống trước hoặc sau ăn"
+    },
+    {
+      "ten": "Beroca",
+      "dvt": "Viên",
+      "gia": 7800,
+      "ton_kho": 500,
+      "ham_luong": "",
+      "cach_dung": "Hòa tan vào nước, uống sáng"
+    },
+    {
+      "ten": "Berberin 100mg (VN)",
+      "dvt": "Viên",
+      "gia": 680,
+      "ton_kho": 500,
+      "ham_luong": "100mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Azithromycin 500mg",
+      "dvt": "Viên",
+      "gia": 7200,
+      "ton_kho": 500,
+      "ham_luong": "500mg",
+      "cach_dung": "Uống 1 giờ trước ăn hoặc 2 giờ sau ăn"
+    },
+    {
+      "ten": "Amlodipine 10mg",
+      "dvt": "Viên",
+      "gia": 1800,
+      "ton_kho": 500,
+      "ham_luong": "10mg",
+      "cach_dung": "Uống hàng ngày"
+    },
+    {
+      "ten": "Loratadin 10mg",
+      "dvt": "Viên",
+      "gia": 650,
+      "ton_kho": 500,
+      "ham_luong": "10mg",
+      "cach_dung": "Uống 1 lần/ngày"
+    },
+    {
+      "ten": "Cefadroxil 500mg",
+      "dvt": "Viên",
+      "gia": 2500,
+      "ton_kho": 500,
+      "ham_luong": "500mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Esomeprazol HV 40 mg",
+      "dvt": "Viên",
+      "gia": 4000,
+      "ton_kho": 500,
+      "ham_luong": "40mg",
+      "cach_dung": "Uống trước ăn 30 phút"
+    },
+    {
+      "ten": "SOSLac G3",
+      "dvt": "tube",
+      "gia": 29000,
+      "ton_kho": 500,
+      "ham_luong": "",
+      "cach_dung": "Bôi ngoài da"
+    },
+    {
+      "ten": "Silymarin 140mg",
+      "dvt": "Viên",
+      "gia": 1700,
+      "ton_kho": 500,
+      "ham_luong": "140mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Klamentin 875/125 mg",
+      "dvt": "Viên",
+      "gia": 8800,
+      "ton_kho": 500,
+      "ham_luong": "875mg/125mg",
+      "cach_dung": "Uống ngay trước bữa ăn"
+    },
+    {
+      "ten": "Medrol 16mg",
+      "dvt": "Viên",
+      "gia": 4600,
+      "ton_kho": 500,
+      "ham_luong": "16mg",
+      "cach_dung": "Uống sau ăn sáng"
+    },
+    {
+      "ten": "Yumangel",
+      "dvt": "Gói",
+      "gia": 5250,
+      "ton_kho": 500,
+      "ham_luong": "",
+      "cach_dung": "Uống sau ăn 1-2h hoặc khi đau"
+    },
+    {
+      "ten": "Telfast HD 180 mg",
+      "dvt": "Viên",
+      "gia": 8500,
+      "ton_kho": 500,
+      "ham_luong": "180mg",
+      "cach_dung": "Uống trước bữa ăn"
+    },
+    {
+      "ten": "Tobramycin",
+      "dvt": "Lọ",
+      "gia": 16000,
+      "ton_kho": 500,
+      "ham_luong": "0.3%",
+      "cach_dung": "Nhỏ mắt"
+    },
+    {
+      "ten": "Panadol Extra",
+      "dvt": "Viên",
+      "gia": 1500,
+      "ton_kho": 500,
+      "ham_luong": "500mg/65mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Hapacol sủi",
+      "dvt": "Viên",
+      "gia": 2200,
+      "ton_kho": 500,
+      "ham_luong": "500mg",
+      "cach_dung": "Hòa tan vào nước"
+    },
+    {
+      "ten": "Cefalexin 500 mg",
+      "dvt": "Viên",
+      "gia": 3000,
+      "ton_kho": 500,
+      "ham_luong": "500mg",
+      "cach_dung": "Uống trước bữa ăn"
+    },
+    {
+      "ten": "Cefuroxim 500 mg",
+      "dvt": "Viên",
+      "gia": 5000,
+      "ton_kho": 500,
+      "ham_luong": "500mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Pharmaton Energy",
+      "dvt": "Viên",
+      "gia": 2800,
+      "ton_kho": 500,
+      "ham_luong": "",
+      "cach_dung": "Uống vào buổi sáng với thức ăn"
+    },
+    {
+      "ten": "Vastarel MR 35mg",
+      "dvt": "Viên",
+      "gia": 3500,
+      "ton_kho": 500,
+      "ham_luong": "35mg",
+      "cach_dung": "Uống cùng bữa ăn"
+    },
+    {
+      "ten": "No-Spa 40mg",
+      "dvt": "Viên",
+      "gia": 1200,
+      "ton_kho": 500,
+      "ham_luong": "40mg",
+      "cach_dung": "Uống"
+    },
+    {
+      "ten": "Fluconazol 150 mg",
+      "dvt": "Viên",
+      "gia": 8000,
+      "ton_kho": 500,
+      "ham_luong": "150mg",
+      "cach_dung": "Uống"
+    },
+    {
+      "ten": "Silkeron 10mg",
+      "dvt": "Tuýp",
+      "gia": 19000,
+      "ton_kho": 500,
+      "ham_luong": "10mg",
+      "cach_dung": "Bôi ngoài da"
+    },
+    {
+      "ten": "Voltaren 75 mg",
+      "dvt": "Viên",
+      "gia": 7000,
+      "ton_kho": 500,
+      "ham_luong": "75mg",
+      "cach_dung": "Uống sau ăn"
+    },
+    {
+      "ten": "Nexium 40 mg",
+      "dvt": "Viên",
+      "gia": 25500,
+      "ton_kho": 500,
+      "ham_luong": "40mg",
+      "cach_dung": "Uống trước bữa ăn"
+    },
+    {
+      "ten": "Augmentin 625 mg",
+      "dvt": "Viên",
+      "gia": 13000,
+      "ton_kho": 500,
+      "ham_luong": "500mg/125mg",
+      "cach_dung": "Uống lúc bắt đầu bữa ăn"
+    },
+    {
+      "ten": "Auclatyl 1g",
+      "dvt": "Viên",
+      "gia": 11500,
+      "ton_kho": 500,
+      "ham_luong": "875mg/125mg",
+      "cach_dung": "Uống ngay trước bữa ăn",
+      "ghi_chu": "Kháng sinh Amoxicillin + Acid Clavulanic"
+    },
+    {
+      "ten": "Shinphagel",
+      "dvt": "Gói",
+      "gia": 4500,
+      "ton_kho": 500,
+      "ham_luong": "Nhôm phosphat gel",
+      "cach_dung": "Uống sau ăn 1-2h hoặc khi đau",
+      "ghi_chu": "Kháng acid bảo vệ niêm mạc dạ dày"
+    },
+    {
+      "ten": "Gaviscon",
+      "dvt": "Gói",
+      "gia": 7000,
+      "ton_kho": 500,
+      "ham_luong": "",
+      "cach_dung": "Uống sau bữa ăn và lúc đi ngủ"
+    },
+    {
+      "ten": "Homtamin Ginseng",
+      "dvt": "Viên",
+      "gia": 2300,
+      "ton_kho": 500,
+      "ham_luong": "",
+      "cach_dung": "Uống 1 viên/ngày sau ăn"
+    }
+  ],
+  "vat_tu": [
+    {
+      "ten": "Băng thun 3 móc",
+      "dvt": "Cuộn",
+      "gia": 18000,
+      "ton_kho": 300,
+      "ghi_chu": "Dùng cố định khớp, vết thương"
+    },
+    {
+      "ten": "Gạc vô khuẩn",
+      "dvt": "Miếng",
+      "gia": 8500,
+      "ton_kho": 300,
+      "ghi_chu": "Băng bó vết thương hở"
+    },
+    {
+      "ten": "NaCL 0,9% 500ml HD",
+      "dvt": "Chai",
+      "gia": 13000,
+      "ton_kho": 300,
+      "ghi_chu": "Dùng để rửa vết thương, tiêm truyền"
+    },
+    {
+      "ten": "Povidin chai 10% 90ml",
+      "dvt": "Chai",
+      "gia": 22000,
+      "ton_kho": 300,
+      "ghi_chu": "Sát khuẩn vết thương ngoài da"
+    }
+  ],
+  "dich_vu": [
+    {
+      "ten": "Xoa bóp cục bộ bằng tay",
+      "dvt": "Lần",
+      "gia": 51300,
+      "ghi_chu": "Điều trị vật lý trị liệu"
+    },
+    {
+      "ten": "Chiếu đèn hồng ngoại",
+      "dvt": "Lần",
+      "gia": 40900,
+      "ghi_chu": "Giảm đau, giãn cơ"
+    },
+    {
+      "ten": "Khí dung mũi họng",
+      "dvt": "Lần",
+      "gia": 0,
+      "ghi_chu": "Điều trị bệnh lý đường hô hấp"
+    }
+  ],
+  "mau_benh": [
+    {
+      "trang": 1,
+      "ten_benh": "ac",
+      "icd_10": "",
+      "chan_doan_chuan": "ac",
+      "loi_dan_mac_dinh": "Sử dụng thuốc đúng liều lượng, tái khám khi có bất thường.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Yumangel",
+          "so_luong": 10,
+          "don_vi_tinh": "Gói",
+          "don_gia": 5250
+        }
+      ]
+    },
+    {
+      "trang": 2,
+      "ten_benh": "as",
+      "icd_10": "",
+      "chan_doan_chuan": "as",
+      "loi_dan_mac_dinh": "Sử dụng thuốc đúng liều lượng, tái khám khi có bất thường.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Gaviscon",
+          "so_luong": 1,
+          "don_vi_tinh": "Gói",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Băng thun 3 móc",
+          "so_luong": 2,
+          "don_vi_tinh": "Cuộn",
+          "don_gia": 18000
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Gạc vô khuẩn",
+          "so_luong": 2,
+          "don_vi_tinh": "Miếng",
+          "don_gia": 8500
+        }
+      ],
+      "dich_vu": [
+        {
+          "ten": "Xoa bóp cục bộ bằng tay",
+          "so_luong": 2,
+          "don_vi_tinh": "Lần",
+          "don_gia": 51300
+        },
+        {
+          "ten": "Chiếu đèn hồng ngoại",
+          "so_luong": 2,
+          "don_vi_tinh": "Lần",
+          "don_gia": 40900
+        }
+      ]
+    },
+    {
+      "trang": 3,
+      "ten_benh": "bạnh a",
+      "icd_10": "",
+      "chan_doan_chuan": "bạnh a",
+      "loi_dan_mac_dinh": "Sử dụng thuốc đúng liều lượng, tái khám khi có bất thường.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Beroca",
+          "so_luong": 7800,
+          "don_vi_tinh": "Viên",
+          "don_gia": 0
+        },
+        {
+          "ten": "Amlodipine 10mg",
+          "so_luong": 1800,
+          "don_vi_tinh": "Viên",
+          "don_gia": 0
+        }
+      ]
+    },
+    {
+      "trang": 4,
+      "ten_benh": "bbbbb",
+      "icd_10": "",
+      "chan_doan_chuan": "bbbbb",
+      "loi_dan_mac_dinh": "Sử dụng thuốc đúng liều lượng, tái khám khi có bất thường.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxicilin 500mg",
+          "so_luong": 24,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Shinphagel",
+          "so_luong": 20,
+          "don_vi_tinh": "Gói",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        }
+      ]
+    },
+    {
+      "trang": 5,
+      "ten_benh": "Chấn thương gối (P)",
+      "icd_10": "S80.0",
+      "chan_doan_chuan": "Chấn thương gối",
+      "loi_dan_mac_dinh": "Nghỉ ngơi, chườm lạnh, hạn chế vận động mạnh.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Klamentin 875/125 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8800
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 16,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Băng thun 3 móc",
+          "so_luong": 2,
+          "don_vi_tinh": "Cuộn",
+          "don_gia": 18000
+        }
+      ]
+    },
+    {
+      "trang": 6,
+      "ten_benh": "Chấn thương gối (T)",
+      "icd_10": "S80.0",
+      "chan_doan_chuan": "Chấn thương gối",
+      "loi_dan_mac_dinh": "Nghỉ ngơi, chườm lạnh, hạn chế vận động mạnh.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Klamentin 875/125 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8800
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 16,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Băng thun 3 móc",
+          "so_luong": 2,
+          "don_vi_tinh": "Cuộn",
+          "don_gia": 18000
+        }
+      ]
+    },
+    {
+      "trang": 7,
+      "ten_benh": "Chấn thương mỏm khuỷu (P)",
+      "icd_10": "S50.0",
+      "chan_doan_chuan": "Chấn thương mỏm khuỷu",
+      "loi_dan_mac_dinh": "Nghỉ ngơi, chườm lạnh, hạn chế vận động cánh tay.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 16,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Klamentin 875/125 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8800
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Băng thun 3 móc",
+          "so_luong": 18000,
+          "don_vi_tinh": "Cuộn",
+          "don_gia": 0
+        }
+      ]
+    },
+    {
+      "trang": 8,
+      "ten_benh": "Chấn thương mỏm khuỷu (T)",
+      "icd_10": "S50.0",
+      "chan_doan_chuan": "Chấn thương mỏm khuỷu",
+      "loi_dan_mac_dinh": "Nghỉ ngơi, chườm lạnh, hạn chế vận động cánh tay.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 16,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Klamentin 875/125 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8800
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Băng thun 3 móc",
+          "so_luong": 18000,
+          "don_vi_tinh": "Cuộn",
+          "don_gia": 0
+        }
+      ]
+    },
+    {
+      "trang": 9,
+      "ten_benh": "Chấn thương vùng gối T",
+      "icd_10": "",
+      "chan_doan_chuan": "Chấn thương vùng gối T",
+      "loi_dan_mac_dinh": "Sử dụng thuốc đúng liều lượng, tái khám khi có bất thường.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Auclatyl 1g",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 16,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Băng thun 3 móc",
+          "so_luong": 2,
+          "don_vi_tinh": "Cuộn",
+          "don_gia": 18000
+        },
+        {
+          "ten": "Gạc vô khuẩn",
+          "so_luong": 3,
+          "don_vi_tinh": "Miếng",
+          "don_gia": 8500
+        },
+        {
+          "ten": "NaCL 0,9% 500ml HD",
+          "so_luong": 1,
+          "don_vi_tinh": "Chai",
+          "don_gia": 13000
+        }
+      ]
+    },
+    {
+      "trang": 10,
+      "ten_benh": "Đau cột sống thắt lưng",
+      "icd_10": "M54.5",
+      "chan_doan_chuan": "Đau cột sống thắt lưng",
+      "loi_dan_mac_dinh": "Nghỉ ngơi, tránh mang vác nặng, chườm ấm vùng đau.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Voltaren 75 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        }
+      ],
+      "dich_vu": [
+        {
+          "ten": "Xoa bóp cục bộ bằng tay",
+          "so_luong": 5,
+          "don_vi_tinh": "Lần",
+          "don_gia": 51300
+        },
+        {
+          "ten": "Chiếu đèn hồng ngoại",
+          "so_luong": 5,
+          "don_vi_tinh": "Lần",
+          "don_gia": 40900
+        }
+      ]
+    },
+    {
+      "trang": 11,
+      "ten_benh": "Đau đầu, viêm mũi dị ứng",
+      "icd_10": "J30.4",
+      "chan_doan_chuan": "Viêm mũi dị ứng",
+      "loi_dan_mac_dinh": "Uống nhiều nước ấm, tránh tiếp xúc khói bụi và dị nguyên.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 16,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Telfast HD 180 mg",
+          "so_luong": 18,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        }
+      ]
+    },
+    {
+      "trang": 12,
+      "ten_benh": "Đau răng",
+      "icd_10": "K08.8",
+      "chan_doan_chuan": "Đau răng / tủy răng",
+      "loi_dan_mac_dinh": "Vệ sinh răng miệng sạch sẽ, tái khám nha khoa theo hẹn.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 12,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Voltaren 75 mg",
+          "so_luong": 15,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 13,
+      "ten_benh": "Đau thắt cột sống, thắt lưng",
+      "icd_10": "M54.5",
+      "chan_doan_chuan": "Đau cột sống thắt lưng",
+      "loi_dan_mac_dinh": "Nghỉ ngơi, tránh mang vác nặng, chườm ấm vùng đau.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ],
+      "dich_vu": [
+        {
+          "ten": "Xoa bóp cục bộ bằng tay",
+          "so_luong": 3,
+          "don_vi_tinh": "Lần",
+          "don_gia": 20000
+        },
+        {
+          "ten": "Chiếu đèn hồng ngoại",
+          "so_luong": 3,
+          "don_vi_tinh": "Lần",
+          "don_gia": 20000
+        }
+      ]
+    },
+    {
+      "trang": 14,
+      "ten_benh": "Đau tủy răng",
+      "icd_10": "K08.8",
+      "chan_doan_chuan": "Đau răng / tủy răng",
+      "loi_dan_mac_dinh": "Vệ sinh răng miệng sạch sẽ, tái khám nha khoa theo hẹn.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 12,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Voltaren 75 mg",
+          "so_luong": 15,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 15,
+      "ten_benh": "Hội chứng ruột kích thích",
+      "icd_10": "K58",
+      "chan_doan_chuan": "Hội chứng ruột kích thích",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, tránh thức ăn cay nóng, giảm căng thẳng.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Berberin 100mg (VN)",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 680
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Yumangel",
+          "so_luong": 20,
+          "don_vi_tinh": "Gói",
+          "don_gia": 5250
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 16,
+      "ten_benh": "Loét dạ dày - tá tràng",
+      "icd_10": "K27",
+      "chan_doan_chuan": "Viêm/Loét dạ dày",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, kiêng đồ chua cay, không thức khuya, kiêng rượu bia.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Azithromycin 500mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7200
+        },
+        {
+          "ten": "Yumangel",
+          "so_luong": 10,
+          "don_vi_tinh": "Gói",
+          "don_gia": 5250
+        },
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        }
+      ]
+    },
+    {
+      "trang": 17,
+      "ten_benh": "Nấm da bội nhiễm",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Fluconazol 150 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8000
+        },
+        {
+          "ten": "Silkeron 10mg",
+          "so_luong": 2,
+          "don_vi_tinh": "Tuýp",
+          "don_gia": 19000
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 18,
+      "ten_benh": "Nấm da đầu",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Fluconazol 150 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8000
+        },
+        {
+          "ten": "Silkeron 10mg",
+          "so_luong": 2,
+          "don_vi_tinh": "Tuýp",
+          "don_gia": 19000
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 19,
+      "ten_benh": "Nấm da toàn thân",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Fluconazol 150 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8000
+        },
+        {
+          "ten": "Silkeron 10mg",
+          "so_luong": 2,
+          "don_vi_tinh": "Tuýp",
+          "don_gia": 19000
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 20,
+      "ten_benh": "Nấm da vùng bẹn",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Fluconazol 150 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8000
+        },
+        {
+          "ten": "Silkeron 10mg",
+          "so_luong": 2,
+          "don_vi_tinh": "Tuýp",
+          "don_gia": 19000
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 21,
+      "ten_benh": "Nấm da, Bội nhiễm",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Fluconazol 150 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8000
+        },
+        {
+          "ten": "Silkeron 10mg",
+          "so_luong": 2,
+          "don_vi_tinh": "Tuýp",
+          "don_gia": 19000
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 22,
+      "ten_benh": "Nấm ống tai",
+      "icd_10": "H65",
+      "chan_doan_chuan": "Viêm/Nấm ống tai",
+      "loi_dan_mac_dinh": "Giữ tai khô ráo, không tự ý dùng tăm bông ngoáy sâu vào tai.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 23,
+      "ten_benh": "Rối loạn tiêu hóa",
+      "icd_10": "K30",
+      "chan_doan_chuan": "Rối loạn tiêu hóa",
+      "loi_dan_mac_dinh": "Ăn thức ăn chín, dễ tiêu, uống đủ nước, nghỉ ngơi hợp lý.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Enterogermina",
+          "so_luong": 10,
+          "don_vi_tinh": "Gói",
+          "don_gia": 8500
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        }
+      ]
+    },
+    {
+      "trang": 24,
+      "ten_benh": "Suy nhược cơ thể, dạ dày",
+      "icd_10": "K27",
+      "chan_doan_chuan": "Viêm/Loét dạ dày",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, kiêng đồ chua cay, không thức khuya, kiêng rượu bia.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Enterogermina",
+          "so_luong": 10,
+          "don_vi_tinh": "Gói",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Silymarin 140mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1700
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        }
+      ]
+    },
+    {
+      "trang": 25,
+      "ten_benh": "Tăng huyết áp, tăng men gan",
+      "icd_10": "I10",
+      "chan_doan_chuan": "Tăng huyết áp",
+      "loi_dan_mac_dinh": "Ăn nhạt, theo dõi huyết áp hàng ngày, duy trì tập thể dục nhẹ nhàng.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amlodipine 10mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1800
+        },
+        {
+          "ten": "Silymarin 140mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1700
+        },
+        {
+          "ten": "Vastarel MR 35mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3500
+        }
+      ]
+    },
+    {
+      "trang": 26,
+      "ten_benh": "Tăng huyết áp",
+      "icd_10": "I10",
+      "chan_doan_chuan": "Tăng huyết áp",
+      "loi_dan_mac_dinh": "Ăn nhạt, theo dõi huyết áp hàng ngày, duy trì tập thể dục nhẹ nhàng.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amlodipine 10mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1800
+        },
+        {
+          "ten": "Silymarin 140mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1700
+        },
+        {
+          "ten": "Vastarel MR 35mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3500
+        }
+      ]
+    },
+    {
+      "trang": 27,
+      "ten_benh": "Tiêu chảy cấp",
+      "icd_10": "K30",
+      "chan_doan_chuan": "Rối loạn tiêu hóa",
+      "loi_dan_mac_dinh": "Ăn thức ăn chín, dễ tiêu, uống đủ nước, nghỉ ngơi hợp lý.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Berberin 100mg (VN)",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 680
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Yumangel",
+          "so_luong": 20,
+          "don_vi_tinh": "Gói",
+          "don_gia": 5250
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 28,
+      "ten_benh": "Tiêu chảy, dạ dày",
+      "icd_10": "K27",
+      "chan_doan_chuan": "Viêm/Loét dạ dày",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, kiêng đồ chua cay, không thức khuya, kiêng rượu bia.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Auclatyl 1g",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Berberin 100mg (VN)",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 680
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Shinphagel",
+          "so_luong": 20,
+          "don_vi_tinh": "Gói",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 29,
+      "ten_benh": "Vết thương phần mềm cẳng chân (P)",
+      "icd_10": "T14.1",
+      "chan_doan_chuan": "Vết thương phần mềm",
+      "loi_dan_mac_dinh": "Rửa và thay băng vết thương hàng ngày, tránh để vết thương dính nước dơ.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 30,
+      "ten_benh": "Vết thương phần mềm cẳng chân (T)",
+      "icd_10": "T14.1",
+      "chan_doan_chuan": "Vết thương phần mềm",
+      "loi_dan_mac_dinh": "Rửa và thay băng vết thương hàng ngày, tránh để vết thương dính nước dơ.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 31,
+      "ten_benh": "Vết thương phần mềm cẳng tay (P)",
+      "icd_10": "T14.1",
+      "chan_doan_chuan": "Vết thương phần mềm",
+      "loi_dan_mac_dinh": "Rửa và thay băng vết thương hàng ngày, tránh để vết thương dính nước dơ.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 32,
+      "ten_benh": "Vết thương phần mềm cẳng tay (T)",
+      "icd_10": "T14.1",
+      "chan_doan_chuan": "Vết thương phần mềm",
+      "loi_dan_mac_dinh": "Rửa và thay băng vết thương hàng ngày, tránh để vết thương dính nước dơ.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 33,
+      "ten_benh": "Vết thương phần mềm mặt",
+      "icd_10": "T14.1",
+      "chan_doan_chuan": "Vết thương phần mềm",
+      "loi_dan_mac_dinh": "Rửa và thay băng vết thương hàng ngày, tránh để vết thương dính nước dơ.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 34,
+      "ten_benh": "Vết thương trầy xước da",
+      "icd_10": "T14.1",
+      "chan_doan_chuan": "Vết thương phần mềm",
+      "loi_dan_mac_dinh": "Rửa và thay băng vết thương hàng ngày, tránh để vết thương dính nước dơ.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ],
+      "vat_tu": [
+        {
+          "ten": "Povidin",
+          "so_luong": 10,
+          "don_vi_tinh": "chai",
+          "don_gia": 90
+        }
+      ]
+    },
+    {
+      "trang": 35,
+      "ten_benh": "Viêm amydal",
+      "icd_10": "J03",
+      "chan_doan_chuan": "Viêm họng / Amidan",
+      "loi_dan_mac_dinh": "Súc họng bằng nước muối sinh lý ấm, giữ ấm cổ, uống đủ nước.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Augmentin 625 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 13000
+        },
+        {
+          "ten": "Voltaren 75 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Homtamin Ginseng",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2300
+        }
+      ]
+    },
+    {
+      "trang": 36,
+      "ten_benh": "Viêm da bội nhiễm",
+      "icd_10": "L23",
+      "chan_doan_chuan": "Viêm da",
+      "loi_dan_mac_dinh": "Giữ da sạch, tránh gãi hoặc chà xát mạnh, dùng thuốc đều đặn.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "SOSLac G3",
+          "so_luong": 2,
+          "don_vi_tinh": "tube",
+          "don_gia": 29000
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Cefuroxim 500 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 5000
+        },
+        {
+          "ten": "Azithromycin 500mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7200
+        }
+      ]
+    },
+    {
+      "trang": 37,
+      "ten_benh": "Viêm dạ dày",
+      "icd_10": "K27",
+      "chan_doan_chuan": "Viêm/Loét dạ dày",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, kiêng đồ chua cay, không thức khuya, kiêng rượu bia.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Azithromycin 500mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7200
+        },
+        {
+          "ten": "Yumangel",
+          "so_luong": 10,
+          "don_vi_tinh": "Gói",
+          "don_gia": 5250
+        },
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        }
+      ]
+    },
+    {
+      "trang": 38,
+      "ten_benh": "Viêm da tiếp xúc do dị ứng",
+      "icd_10": "L23",
+      "chan_doan_chuan": "Viêm da",
+      "loi_dan_mac_dinh": "Giữ da sạch, tránh gãi hoặc chà xát mạnh, dùng thuốc đều đặn.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefuroxim 500 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 5000
+        },
+        {
+          "ten": "Azithromycin 500mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7200
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "SOSLac G3",
+          "so_luong": 2,
+          "don_vi_tinh": "tube",
+          "don_gia": 29000
+        }
+      ]
+    },
+    {
+      "trang": 39,
+      "ten_benh": "Viêm da",
+      "icd_10": "L23",
+      "chan_doan_chuan": "Viêm da",
+      "loi_dan_mac_dinh": "Giữ da sạch, tránh gãi hoặc chà xát mạnh, dùng thuốc đều đặn.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefuroxim 500 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 5000
+        },
+        {
+          "ten": "Azithromycin 500mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7200
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "SOSLac G3",
+          "so_luong": 2,
+          "don_vi_tinh": "tube",
+          "don_gia": 29000
+        }
+      ]
+    },
+    {
+      "trang": 40,
+      "ten_benh": "Viêm họng cấp",
+      "icd_10": "J03",
+      "chan_doan_chuan": "Viêm họng / Amidan",
+      "loi_dan_mac_dinh": "Súc họng bằng nước muối sinh lý ấm, giữ ấm cổ, uống đủ nước.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Augmentin 625 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 13000
+        },
+        {
+          "ten": "Voltaren 75 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Homtamin Ginseng",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2300
+        }
+      ]
+    },
+    {
+      "trang": 41,
+      "ten_benh": "Viêm họng, viêm dạ dày",
+      "icd_10": "K27",
+      "chan_doan_chuan": "Viêm/Loét dạ dày",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, kiêng đồ chua cay, không thức khuya, kiêng rượu bia.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Auclatyl 1g",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        }
+      ]
+    },
+    {
+      "trang": 42,
+      "ten_benh": "Viêm họng,viêm dạ dày",
+      "icd_10": "K27",
+      "chan_doan_chuan": "Viêm/Loét dạ dày",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, kiêng đồ chua cay, không thức khuya, kiêng rượu bia.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Klamentin 875/125 mg",
+          "so_luong": 14,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        }
+      ]
+    },
+    {
+      "trang": 43,
+      "ten_benh": "Viêm kết mạc dị ứng",
+      "icd_10": "H10",
+      "chan_doan_chuan": "Viêm kết mạc mắt",
+      "loi_dan_mac_dinh": "Đeo kính râm khi ra ngoài, nhỏ mắt thường xuyên, không dùng chung khăn mặt.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Telfast HD 180 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Tobramycin",
+          "so_luong": 2,
+          "don_vi_tinh": "Lọ",
+          "don_gia": 16000
+        }
+      ]
+    },
+    {
+      "trang": 44,
+      "ten_benh": "Viêm kết mạc kích ứng",
+      "icd_10": "H10",
+      "chan_doan_chuan": "Viêm kết mạc mắt",
+      "loi_dan_mac_dinh": "Đeo kính râm khi ra ngoài, nhỏ mắt thường xuyên, không dùng chung khăn mặt.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Telfast HD 180 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Tobramycin",
+          "so_luong": 2,
+          "don_vi_tinh": "Lọ",
+          "don_gia": 16000
+        }
+      ]
+    },
+    {
+      "trang": 45,
+      "ten_benh": "Viêm kết mạc mắt",
+      "icd_10": "H10",
+      "chan_doan_chuan": "Viêm kết mạc mắt",
+      "loi_dan_mac_dinh": "Đeo kính râm khi ra ngoài, nhỏ mắt thường xuyên, không dùng chung khăn mặt.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Telfast HD 180 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Tobramycin",
+          "so_luong": 2,
+          "don_vi_tinh": "Lọ",
+          "don_gia": 16000
+        }
+      ]
+    },
+    {
+      "trang": 46,
+      "ten_benh": "Viêm kết mạc",
+      "icd_10": "H10",
+      "chan_doan_chuan": "Viêm kết mạc mắt",
+      "loi_dan_mac_dinh": "Đeo kính râm khi ra ngoài, nhỏ mắt thường xuyên, không dùng chung khăn mặt.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefadroxil 500mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2500
+        },
+        {
+          "ten": "Alphachymotrypsin Choay 21microka",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2400
+        },
+        {
+          "ten": "Telfast HD 180 mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 8500
+        },
+        {
+          "ten": "Tobramycin",
+          "so_luong": 2,
+          "don_vi_tinh": "Lọ",
+          "don_gia": 16000
+        }
+      ]
+    },
+    {
+      "trang": 47,
+      "ten_benh": "Viêm lợi",
+      "icd_10": "K05",
+      "chan_doan_chuan": "Viêm lợi",
+      "loi_dan_mac_dinh": "Đánh răng đúng cách, súc miệng nước muối thường xuyên.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Amoxilin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2000
+        },
+        {
+          "ten": "Hapacol sủi",
+          "so_luong": 12,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2200
+        },
+        {
+          "ten": "Voltaren 75 mg",
+          "so_luong": 15,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7000
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        }
+      ]
+    },
+    {
+      "trang": 48,
+      "ten_benh": "Viêm nang lông",
+      "icd_10": "L73.9",
+      "chan_doan_chuan": "Viêm nang lông",
+      "loi_dan_mac_dinh": "Tắm rửa sạch sẽ, mặc đồ cotton thấm mồ hôi, không nặn mụn.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefuroxim 500 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 5000
+        },
+        {
+          "ten": "Azithromycin 500mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7200
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "SOSLac G3",
+          "so_luong": 2,
+          "don_vi_tinh": "tube",
+          "don_gia": 29000
+        }
+      ]
+    },
+    {
+      "trang": 49,
+      "ten_benh": "Viêm ống tai ngoài khu trú",
+      "icd_10": "H65",
+      "chan_doan_chuan": "Viêm/Nấm ống tai",
+      "loi_dan_mac_dinh": "Giữ tai khô ráo, không tự ý dùng tăm bông ngoáy sâu vào tai.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 50,
+      "ten_benh": "Viêm ống tai",
+      "icd_10": "H65",
+      "chan_doan_chuan": "Viêm/Nấm ống tai",
+      "loi_dan_mac_dinh": "Giữ tai khô ráo, không tự ý dùng tăm bông ngoáy sâu vào tai.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 28,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Medrol 16mg",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4600
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Panadol Extra",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1500
+        }
+      ]
+    },
+    {
+      "trang": 51,
+      "ten_benh": "Viêm ruột kích thích",
+      "icd_10": "K58",
+      "chan_doan_chuan": "Hội chứng ruột kích thích",
+      "loi_dan_mac_dinh": "Ăn uống đúng giờ, tránh thức ăn cay nóng, giảm căng thẳng.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Esomeprazol HV 40 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 4000
+        },
+        {
+          "ten": "Enterogermina",
+          "so_luong": 10,
+          "don_vi_tinh": "Gói",
+          "don_gia": 8500
+        },
+        {
+          "ten": "No-Spa 40mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 1200
+        },
+        {
+          "ten": "Pharmaton Energy",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 2800
+        }
+      ]
+    },
+    {
+      "trang": 52,
+      "ten_benh": "Zona bội nhiễm",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Acyclovir 800mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3500
+        },
+        {
+          "ten": "Cefuroxim 500 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 5000
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 5,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        }
+      ]
+    },
+    {
+      "trang": 53,
+      "ten_benh": "Zona",
+      "icd_10": "B35",
+      "chan_doan_chuan": "Nấm da / Zona",
+      "loi_dan_mac_dinh": "Giữ vệ sinh da sạch sẽ, mặc đồ thoáng mát, bôi thuốc theo đúng chỉ định.",
+      "ghi_chu": "",
+      "thuoc": [
+        {
+          "ten": "Acyclovir 800mg",
+          "so_luong": 30,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3500
+        },
+        {
+          "ten": "Cefalexin 500 mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 3000
+        },
+        {
+          "ten": "Beroca",
+          "so_luong": 10,
+          "don_vi_tinh": "Viên",
+          "don_gia": 7800
+        },
+        {
+          "ten": "Loratadin 10mg",
+          "so_luong": 20,
+          "don_vi_tinh": "Viên",
+          "don_gia": 650
+        }
+      ]
+    }
+  ]
+}

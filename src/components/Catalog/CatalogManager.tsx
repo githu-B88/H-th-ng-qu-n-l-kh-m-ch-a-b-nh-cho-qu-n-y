@@ -49,6 +49,8 @@ export const CatalogManager: React.FC = () => {
 
   const [isCoQuanModalOpen, setIsCoQuanModalOpen] = useState(false);
   const [editingCoQuan, setEditingCoQuan] = useState<Partial<CoQuan>>({});
+  const [isSeedConfirmModalOpen, setIsSeedConfirmModalOpen] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const loadData = () => {
     const freshThuoc = sqliteService.getThuocList();
@@ -64,19 +66,6 @@ export const CatalogManager: React.FC = () => {
 
   useEffect(() => {
     loadData();
-
-    // Tự động kiểm tra nếu danh mục thuốc chưa chuẩn hóa (khác 32 thuốc hoặc chưa có Amoxilin 500 mg)
-    const currentThuoc = sqliteService.getThuocList();
-    if (currentThuoc.length !== 32 || (currentThuoc.length > 0 && currentThuoc[0].ten !== 'Amoxilin 500 mg')) {
-      console.log('Tự động chạy forceResetAndSeedData để nạp 32 thuốc chuẩn...');
-      const res = forceResetAndSeedData();
-      if (res.success) {
-        setListThuoc(res.listThuoc);
-        setListVatTu(res.listVatTu);
-        setListDichVu(res.listDichVu);
-      }
-    }
-
     const unsub = sqliteService.subscribe(loadData);
     return unsub;
   }, []);
@@ -153,22 +142,28 @@ export const CatalogManager: React.FC = () => {
   };
 
   const handleSeedMedicalCatalog = () => {
-    if (
-      window.confirm(
-        'Thao tác này sẽ xóa toàn bộ dữ liệu danh mục Thuốc, Vật tư y tế, Dịch vụ cũ và nạp lại chính xác 32 loại thuốc, 4 vật tư, 3 dịch vụ kỹ thuật đã chuẩn hóa. Bạn có muốn tiếp tục?'
-      )
-    ) {
+    setIsSeedConfirmModalOpen(true);
+  };
+
+  const handleConfirmSeedMedical = () => {
+    setIsSeeding(true);
+    try {
       const res = forceResetAndSeedData();
       if (res.success) {
         setSeedMessage(res.message);
-        // Gán State hiển thị lập tức theo YÊU CẦU 3
         setListThuoc(res.listThuoc);
         setListVatTu(res.listVatTu);
         setListDichVu(res.listDichVu);
-        setTimeout(() => setSeedMessage(null), 5000);
+        loadData();
+        setTimeout(() => setSeedMessage(null), 6000);
       } else {
         alert(res.message);
       }
+    } catch (e: any) {
+      alert('Lỗi cập nhật danh mục: ' + (e.message || String(e)));
+    } finally {
+      setIsSeeding(false);
+      setIsSeedConfirmModalOpen(false);
     }
   };
 
@@ -291,11 +286,11 @@ export const CatalogManager: React.FC = () => {
           {activeCatalogTab !== 'co_quan' && (
             <button
               onClick={handleSeedMedicalCatalog}
-              title="Khôi phục danh mục 32 loại thuốc, 4 vật tư, 3 dịch vụ kỹ thuật chuẩn"
+              title="Khôi phục danh mục gốc mặc định: 34 loại thuốc, 4 vật tư, 3 dịch vụ kỹ thuật"
               className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold shadow-xs transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
-              <span>Nạp danh mục mẫu chuẩn</span>
+              <span>Nạp lại danh mục mặc định</span>
             </button>
           )}
 
@@ -984,6 +979,64 @@ export const CatalogManager: React.FC = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal Xác Nhận Cập Nhật / Nạp Lại Danh Mục Mặc Định */}
+      <Modal
+        isOpen={isSeedConfirmModalOpen}
+        onClose={() => !isSeeding && setIsSeedConfirmModalOpen(false)}
+        title="Xác Nhận Cập Nhật Danh Mục Y Tế Gốc"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 space-y-2">
+              <p className="font-bold text-sm text-amber-950">
+                Bạn có chắc chắn muốn nạp và cập nhật lại danh mục mặc định?
+              </p>
+              <p>
+                Thao tác này sẽ đặt lại danh mục thuốc, vật tư và dịch vụ kỹ thuật về danh sách gốc chuẩn hóa từ file <span className="font-mono font-bold">defaultData.json</span>:
+              </p>
+              <ul className="list-disc pl-4 space-y-1 font-semibold text-amber-800">
+                <li>34 loại thuốc chuẩn (cơ số điều trị)</li>
+                <li>4 danh mục vật tư y tế tiêu hao</li>
+                <li>3 dịch vụ kỹ thuật y tế</li>
+              </ul>
+              <p className="text-[11px] text-amber-700 italic">
+                * Lưu ý: Hồ sơ khám bệnh và danh sách nhân sự hiện tại sẽ được bảo lưu an toàn.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              disabled={isSeeding}
+              onClick={() => setIsSeedConfirmModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold disabled:opacity-50"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              disabled={isSeeding}
+              onClick={handleConfirmSeedMedical}
+              className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {isSeeding ? (
+                <>
+                  <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Đang cập nhật...</span>
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Xác Nhận Cập Nhật Lại</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -41,7 +41,7 @@ export const printElement = (
     orientation === 'landscape'
       ? `@page {
           size: A4 landscape;
-          margin: 20mm 15mm 20mm 25mm;
+          margin: 18mm 15mm 12mm 25mm;
           @top-center {
             content: counter(page);
             font-size: 11pt;
@@ -55,7 +55,7 @@ export const printElement = (
         }`
       : `@page {
           size: A4 portrait;
-          margin: 15mm 15mm 15mm 20mm;
+          margin: 18mm 15mm 12mm 20mm;
           @top-center {
             content: counter(page);
             font-size: 11pt;
@@ -86,16 +86,16 @@ export const printElement = (
             background: #ffffff !important;
             color: #000000 !important;
             font-family: 'Times New Roman', Times, serif !important;
-            font-size: 12.5pt;
-            line-height: 1.35;
+            font-size: 12pt;
+            line-height: 1.25;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
-            margin-bottom: 6px;
+            margin-top: 4px;
+            margin-bottom: 4px;
           }
           th, td {
             color: #000000;
@@ -108,8 +108,10 @@ export const printElement = (
           table.border-collapse th, table.border-collapse td,
           th.border, td.border, th, td {
             border: 1px solid #000000 !important;
-            padding: 4px 6px;
-            font-size: 11.5pt;
+            padding: 0.5px 3px !important;
+            font-size: 11pt;
+            height: 16px !important;
+            line-height: 1.18;
           }
           .border-none, .border-none th, .border-none td {
             border: none !important;

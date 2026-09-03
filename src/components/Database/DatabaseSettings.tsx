@@ -95,7 +95,8 @@ export const DatabaseSettings: React.FC = () => {
   const handleSeedMedicalOnly = () => {
     if (
       window.confirm(
-        'Thao tác này sẽ xóa dữ liệu cũ và nạp lại toàn bộ 32 loại thuốc, 4 vật tư y tế, 3 dịch vụ kỹ thuật đã chuẩn hóa. Các hồ sơ khám và nhân sự vẫn được giữ nguyên. Bạn có muốn thực hiện?'
+        'XÁC NHẬN NẠP LẠI DANH MỤC TỪ DEFAULTDATA.JSON:\n\n' +
+        'Thao tác này sẽ xóa dữ liệu cũ và nạp lại danh mục gốc từ file defaultData.json (34 loại thuốc, 4 vật tư y tế, 3 dịch vụ kỹ thuật). Các hồ sơ khám và nhân sự vẫn được giữ nguyên. Bạn có muốn thực hiện?'
       )
     ) {
       const res = seedMedicalData();
@@ -304,7 +305,7 @@ export const DatabaseSettings: React.FC = () => {
               className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
-              <span>Nạp Lại Danh Mục Y Tế Chuẩn (32 Thuốc)</span>
+              <span>Nạp Lại Danh Mục Y Tế Chuẩn (34 Thuốc, 4 Vật Tư, 3 Dịch Vụ)</span>
             </button>
 
             {/* Button: Cài lại toàn bộ CSDL mẫu */}

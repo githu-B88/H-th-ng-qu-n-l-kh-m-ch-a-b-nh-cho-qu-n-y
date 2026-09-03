@@ -59,9 +59,17 @@ export const DoctorManager: React.FC = () => {
     e.preventDefault();
     if (!editingDoctor.ho_ten?.trim()) return;
 
-    sqliteService.saveBacSi(editingDoctor);
-    setIsModalOpen(false);
-    loadData();
+    try {
+      const res = sqliteService.saveBacSi(editingDoctor);
+      if (res && !res.success) {
+        alert(res.error || 'Không thể lưu bác sĩ. Vui lòng kiểm tra lại thông tin.');
+        return;
+      }
+      setIsModalOpen(false);
+      loadData();
+    } catch (err: any) {
+      alert('Lỗi: ' + (err.message || err));
+    }
   };
 
   const handleDeleteDoctor = (id: number) => {
@@ -69,8 +77,14 @@ export const DoctorManager: React.FC = () => {
       alert('Phòng khám cần tối thiểu ít nhất 1 Bác sĩ / Y sĩ!');
       return;
     }
-    if (window.confirm('Bạn có chắc chắn muốn xóa thông tin Bác sĩ / Y sĩ này?')) {
-      sqliteService.deleteBacSi(id);
+    const docToDelete = bacSiList.find(b => b.id === id);
+    const name = docToDelete ? docToDelete.ho_ten : 'Bác sĩ này';
+    if (window.confirm(`Bạn có chắc chắn muốn xóa "${name}"? Các hồ sơ khám liên quan sẽ được tự động chuyển giao an toàn cho bác sĩ khác.`)) {
+      const res = sqliteService.deleteBacSi(id);
+      if (res && !res.success) {
+        alert(res.error || 'Không thể xóa bác sĩ!');
+        return;
+      }
       loadData();
     }
   };

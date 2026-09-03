@@ -4,7 +4,7 @@ import { Printer, ArrowLeft, FileText, CheckCircle2, ShieldCheck, FileDown, Load
 import { docTienBangChu, ensureTrailingDot } from '../../utils/docTienBangChu';
 import { exportBangKeToDocx } from '../../utils/exportBangKeDocx';
 import { getTreatmentDateRange } from '../../utils/treatmentDate';
-import { getFormattedDonVi } from '../../utils/formatDonVi';
+import { getFormattedDonVi, formatDonViCap1BacSiHeader } from '../../utils/formatDonVi';
 import { printElement } from '../../utils/printHelper';
 
 interface PrescriptionPrintProps {
@@ -117,6 +117,14 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
     record.ten_don_vi_nhan_su
   );
 
+  // Doctor Level 1 Unit (Tiêu ngữ góc trái biến động theo bác sĩ đang khám, bỏ từ Vùng ở cuối nếu có)
+  const donViCap1BacSi = formatDonViCap1BacSiHeader(
+    (record as any).doctor?.level1Unit ||
+    (record as any).doctor?.ten_don_vi_cap_1 ||
+    (record as any).ten_don_vi_cap_1_bac_si ||
+    record.ten_don_vi_cap_1
+  );
+
   // Signer names formatting: [Cấp bậc] [Họ và tên]
   const tenNguoiBenhKy = [record.cap_bac_nhan_su, record.ten_nhan_su].filter(Boolean).join(' ') || record.ten_nhan_su || '';
   const tenBacSiKy = record.ten_bac_si || '';
@@ -217,16 +225,11 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
             style={{ fontFamily: "'Times New Roman', Times, serif" }}
           >
             {/* Phần 1: Tiêu đề */}
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex justify-between items-start mb-2">
               <div className="text-center w-[250px]" style={{ fontSize: '13pt' }}>
-                <div className="font-normal uppercase tracking-wide">BTL VÙNG 5 HQ</div>
-                <div className="font-bold uppercase tracking-wide">
-                  {(
-                    (record as any).doctor?.level1Unit ||
-                    (record as any).ten_don_vi_cap_1_bac_si ||
-                    record.ten_don_vi_cap_1 ||
-                    'PHÒNG THAM MƯU'
-                  ).toUpperCase()}
+                <div className="font-normal uppercase tracking-wide leading-tight">BTL VÙNG 5 HQ</div>
+                <div className="font-bold uppercase tracking-wide leading-[1.05] mt-0.5" style={{ lineHeight: '1.05' }}>
+                  {donViCap1BacSi}
                 </div>
                 <div
                   className="w-[110px] border-b border-black mx-auto relative -top-[3px]"
@@ -241,7 +244,7 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
               </div>
             </div>
 
-            <div className="text-center my-3 w-full">
+            <div className="text-center my-2 w-full">
               <h1
                 className="font-bold uppercase leading-snug whitespace-nowrap"
                 style={{ fontSize: '14pt', whiteSpace: 'nowrap' }}
@@ -250,9 +253,9 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
               </h1>
             </div>
 
-            {/* Phần 2: I. Hành chính (12pt theo yêu cầu) */}
-            <div className="mb-3 text-[12pt] space-y-1">
-              <div className="font-bold text-[12pt]">I. Hành chính</div>
+            {/* Phần 2: I. Hành chính (12pt theo yêu cầu) - Giảm khoảng cách dòng 3px */}
+            <div className="mb-1.5 text-[12pt] space-y-[1px] leading-[1.15]">
+              <div className="font-bold text-[12pt] mb-0.5">I. Hành chính</div>
               <div className="flex items-baseline justify-between">
                 <div>
                   <span>Họ tên người bệnh: </span>
@@ -295,143 +298,143 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
             </div>
 
             {/* Phần 3: II. Chi phí khám, chữa bệnh (12pt) */}
-            <div className="mb-2.5 text-[12pt]">
-              <div className="font-bold text-[12pt] mb-1.5">II. Chi phí khám, chữa bệnh</div>
-              <table className="w-full text-[11pt] border-collapse border border-black">
+            <div className="mb-1.5 text-[12pt]">
+              <div className="font-bold text-[12pt] mb-0.5">II. Chi phí khám, chữa bệnh</div>
+              <table className="print-table w-full text-[10pt] border-collapse border border-black leading-none" style={{ borderCollapse: 'collapse', borderColor: '#000' }}>
                 <thead>
                   <tr className="bg-slate-100/50">
-                    <th className="border border-black px-2 py-0.5 text-center font-bold w-[45px]">STT</th>
-                    <th className="border border-black px-2 py-0.5 text-center font-bold">Nội dung</th>
-                    <th className="border border-black px-2 py-0.5 text-center font-bold w-[85px]">Đơn vị tính</th>
-                    <th className="border border-black px-2 py-0.5 text-center font-bold w-[65px]">Số lượng</th>
-                    <th className="border border-black px-2 py-0.5 text-center font-bold w-[105px]">Đơn giá (đồng)</th>
-                    <th className="border border-black px-2 py-0.5 text-center font-bold w-[115px]">Thành tiền (đồng)</th>
-                    <th className="border border-black px-2 py-0.5 text-center font-bold w-[95px]">Ghi chú</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold w-[45px] h-[17px]">STT</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold h-[17px]">Nội dung</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold w-[85px] h-[17px]">Đơn vị tính</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold w-[65px] h-[17px]">Số lượng</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold w-[105px] h-[17px]">Đơn giá (đồng)</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold w-[115px] h-[17px]">Thành tiền (đồng)</th>
+                    <th className="border border-black px-1 py-0 text-center font-bold w-[95px] h-[17px]">Ghi chú</th>
                   </tr>
                 </thead>
                 <tbody>
                   {/* Nhóm I. Thuốc */}
                   <tr>
-                    <td className="border border-black px-2 py-0.5 text-center font-bold">I</td>
-                    <td className="border border-black px-2 py-0.5 font-bold" colSpan={6}>
+                    <td className="border border-black px-1 py-0 text-center font-bold h-[15px]">I</td>
+                    <td className="border border-black px-1 py-0 font-bold h-[15px]" colSpan={6}>
                       Thuốc
                     </td>
                   </tr>
                   {medicineItems.length > 0 ? (
                     medicineItems.map((item, idx) => (
                       <tr key={`m1-med-${idx}`}>
-                        <td className="border border-black px-2 py-0.5 text-center">{idx + 1}</td>
-                        <td className="border border-black px-2 py-0.5">{getItemName(item)}</td>
-                        <td className="border border-black px-2 py-0.5 text-center">{item.don_vi_tinh}</td>
-                        <td className="border border-black px-2 py-0.5 text-center font-semibold">{item.so_luong}</td>
-                        <td className="border border-black px-2 py-0.5 text-right">{formatNumberVN(item.don_gia)}</td>
-                        <td className="border border-black px-2 py-0.5 text-right font-semibold">
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{idx + 1}</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">{getItemName(item)}</td>
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{item.don_vi_tinh}</td>
+                        <td className="border border-black px-1 py-0 text-center font-semibold h-[15px]">{item.so_luong}</td>
+                        <td className="border border-black px-1 py-0 text-right h-[15px]">{formatNumberVN(item.don_gia)}</td>
+                        <td className="border border-black px-1 py-0 text-right font-semibold h-[15px]">
                           {formatNumberVN(item.thanh_tien || item.so_luong * item.don_gia)}
                         </td>
-                        <td className="border border-black px-2 py-0.5 text-center text-[10pt]">{item.ghi_chu || ''}</td>
+                        <td className="border border-black px-1 py-0 text-center text-[9pt] h-[15px]">{item.ghi_chu || ''}</td>
                       </tr>
                     ))
                   ) : (
                     [1, 2, 3].map((rowNum) => (
                       <tr key={`m1-empty-med-${rowNum}`}>
-                        <td className="border border-black px-2 py-0.5 text-center">{rowNum}</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{rowNum}</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
                       </tr>
                     ))
                   )}
 
                   {/* Nhóm II. Vật tư y tế */}
                   <tr>
-                    <td className="border border-black px-2 py-0.5 text-center font-bold">II</td>
-                    <td className="border border-black px-2 py-0.5 font-bold" colSpan={6}>
+                    <td className="border border-black px-1 py-0 text-center font-bold h-[15px]">II</td>
+                    <td className="border border-black px-1 py-0 font-bold h-[15px]" colSpan={6}>
                       Vật tư y tế
                     </td>
                   </tr>
                   {supplyItems.length > 0 ? (
                     supplyItems.map((item, idx) => (
                       <tr key={`m1-sup-${idx}`}>
-                        <td className="border border-black px-2 py-0.5 text-center">{idx + 1}</td>
-                        <td className="border border-black px-2 py-0.5">{getItemName(item)}</td>
-                        <td className="border border-black px-2 py-0.5 text-center">{item.don_vi_tinh}</td>
-                        <td className="border border-black px-2 py-0.5 text-center font-semibold">{item.so_luong}</td>
-                        <td className="border border-black px-2 py-0.5 text-right">{formatNumberVN(item.don_gia)}</td>
-                        <td className="border border-black px-2 py-0.5 text-right font-semibold">
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{idx + 1}</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">{getItemName(item)}</td>
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{item.don_vi_tinh}</td>
+                        <td className="border border-black px-1 py-0 text-center font-semibold h-[15px]">{item.so_luong}</td>
+                        <td className="border border-black px-1 py-0 text-right h-[15px]">{formatNumberVN(item.don_gia)}</td>
+                        <td className="border border-black px-1 py-0 text-right font-semibold h-[15px]">
                           {formatNumberVN(item.thanh_tien || item.so_luong * item.don_gia)}
                         </td>
-                        <td className="border border-black px-2 py-0.5 text-center text-[10pt]">{item.ghi_chu || ''}</td>
+                        <td className="border border-black px-1 py-0 text-center text-[9pt] h-[15px]">{item.ghi_chu || ''}</td>
                       </tr>
                     ))
                   ) : (
                     [1, 2, 3].map((rowNum) => (
                       <tr key={`m1-empty-sup-${rowNum}`}>
-                        <td className="border border-black px-2 py-0.5 text-center">{rowNum}</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{rowNum}</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
                       </tr>
                     ))
                   )}
 
                   {/* Nhóm III. Dịch vụ kỹ thuật (ĐỂ TRỐNG 2 DÒNG NẾU KHÔNG CÓ DỊCH VỤ NÀO) */}
                   <tr>
-                    <td className="border border-black px-2 py-0.5 text-center font-bold">III</td>
-                    <td className="border border-black px-2 py-0.5 font-bold" colSpan={6}>
+                    <td className="border border-black px-1 py-0 text-center font-bold h-[15px]">III</td>
+                    <td className="border border-black px-1 py-0 font-bold h-[15px]" colSpan={6}>
                       Dịch vụ kỹ thuật
                     </td>
                   </tr>
                   {serviceItems.length > 0 ? (
                     serviceItems.map((item, idx) => (
                       <tr key={`m1-srv-${idx}`}>
-                        <td className="border border-black px-2 py-0.5 text-center">{idx + 1}</td>
-                        <td className="border border-black px-2 py-0.5">{getItemName(item)}</td>
-                        <td className="border border-black px-2 py-0.5 text-center">{item.don_vi_tinh}</td>
-                        <td className="border border-black px-2 py-0.5 text-center font-semibold">{item.so_luong}</td>
-                        <td className="border border-black px-2 py-0.5 text-right">{formatNumberVN(item.don_gia)}</td>
-                        <td className="border border-black px-2 py-0.5 text-right font-semibold">
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{idx + 1}</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">{getItemName(item)}</td>
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{item.don_vi_tinh}</td>
+                        <td className="border border-black px-1 py-0 text-center font-semibold h-[15px]">{item.so_luong}</td>
+                        <td className="border border-black px-1 py-0 text-right h-[15px]">{formatNumberVN(item.don_gia)}</td>
+                        <td className="border border-black px-1 py-0 text-right font-semibold h-[15px]">
                           {formatNumberVN(item.thanh_tien || item.so_luong * item.don_gia)}
                         </td>
-                        <td className="border border-black px-2 py-0.5 text-center text-[10pt]">{item.ghi_chu || ''}</td>
+                        <td className="border border-black px-1 py-0 text-center text-[9pt] h-[15px]">{item.ghi_chu || ''}</td>
                       </tr>
                     ))
                   ) : (
                     [1, 2].map((rowNum) => (
                       <tr key={`m1-empty-srv-${rowNum}`}>
-                        <td className="border border-black px-2 py-0.5 text-center">{rowNum}</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
-                        <td className="border border-black px-2 py-0.5">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 text-center h-[15px]">{rowNum}</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
+                        <td className="border border-black px-1 py-0 h-[15px]">&nbsp;</td>
                       </tr>
                     ))
                   )}
 
                   {/* Dòng cuối cùng của bảng: Tổng cộng và [tong_chi_phi] */}
                   <tr className="font-bold">
-                    <td className="border border-black px-2 py-1 text-center" colSpan={2}>
+                    <td className="border border-black px-1 py-0 text-center h-[17px]" colSpan={2}>
                       Tổng cộng
                     </td>
-                    <td className="border border-black px-2 py-1 text-center" colSpan={3}></td>
-                    <td className="border border-black px-2 py-1 text-right text-[12pt]">
+                    <td className="border border-black px-1 py-0 text-center h-[17px]" colSpan={3}></td>
+                    <td className="border border-black px-1 py-0 text-right text-[11pt] h-[17px]">
                       {formatNumberVN(tongChiPhi)}
                     </td>
-                    <td className="border border-black px-2 py-1"></td>
+                    <td className="border border-black px-1 py-0 h-[17px]"></td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Phần 4: Số tiền bằng chữ (12pt) */}
-            <div className="mb-4 text-[12pt]">
+            <div className="mb-2 text-[12pt]">
               <span>Số tiền (viết bằng chữ): </span>
               <span className="font-bold italic">{tongTienBangChu}</span>
             </div>
@@ -442,11 +445,11 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                marginTop: '24px'
+                marginTop: '18px'
               }}
             >
               <div style={{ width: '33.33%', textAlign: 'center' }}>
-                <div style={{ visibility: 'hidden', marginBottom: '6px' }}>&nbsp;</div>
+                <div style={{ visibility: 'hidden', marginBottom: '4px' }}>&nbsp;</div>
                 <div style={{ fontWeight: 'bold' }}>NGƯỜI LẬP BẢNG KÊ</div>
                 <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
                   {record.ten_bac_si || ''}
@@ -454,7 +457,7 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
               </div>
 
               <div style={{ width: '33.33%', textAlign: 'center' }}>
-                <div style={{ visibility: 'hidden', marginBottom: '6px' }}>&nbsp;</div>
+                <div style={{ visibility: 'hidden', marginBottom: '4px' }}>&nbsp;</div>
                 <div style={{ fontWeight: 'bold' }}>XÁC NHẬN CỦA NGƯỜI BỆNH</div>
                 <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
                   {record.ten_nhan_su || ''}
@@ -462,7 +465,7 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
               </div>
 
               <div style={{ width: '33.33%', textAlign: 'center' }}>
-                <div style={{ fontStyle: 'italic', marginBottom: '6px' }}>
+                <div style={{ fontStyle: 'italic', marginBottom: '4px' }}>
                   Ngày {day} tháng {month} năm {year}
                 </div>
                 <div style={{ fontWeight: 'bold' }}>PHỤ TRÁCH QUÂN Y ĐƠN VỊ</div>

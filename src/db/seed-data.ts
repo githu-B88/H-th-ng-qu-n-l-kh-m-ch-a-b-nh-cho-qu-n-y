@@ -327,7 +327,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 1,
     ten_benh: 'Cảm cúm thông thường / Viêm đường hô hấp trên',
-    chan_doan_chuan: 'Cảm cúm thông thường cấp tính (J00) - Theo dõi nhiễm siêu vi đường hô hấp trên',
+    chan_doan_chuan: 'Cảm cúm thông thường / Viêm đường hô hấp trên',
     loi_dan_mac_dinh: 'Uống nhiều nước ấm, nghỉ ngơi tại phòng, súc họng bằng nước muối sinh lý 3 lần/ngày, ăn uống đủ chất, đeo khẩu trang tránh lây lan.',
     ghi_chu: 'Phác đồ điều trị 3 - 5 ngày cho cán bộ bị cảm lạnh, hắt hơi, sốt nhẹ, sổ mũi',
     chi_tiet: [
@@ -340,7 +340,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 2,
     ten_benh: 'Viêm họng cấp tính / Viêm amidan mủ nhẹ',
-    chan_doan_chuan: 'Viêm họng cấp có bội nhiễm vi khuẩn (J02.9)',
+    chan_doan_chuan: 'Viêm họng cấp tính / Viêm amidan mủ nhẹ',
     loi_dan_mac_dinh: 'Uống đủ liệu trình kháng sinh 5-7 ngày, không tự ý ngưng thuốc. Kiêng đồ ăn quá cay/lạnh, uống nước ấm, súc họng nước muối thường xuyên.',
     ghi_chu: 'Dành cho trường hợp nuốt đau, họng đỏ, có đờm mủ vàng đục',
     chi_tiet: [
@@ -353,7 +353,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 3,
     ten_benh: 'Viêm dạ dày cấp tính / Hội chứng trào ngược dạ dày thực quản',
-    chan_doan_chuan: 'Viêm dạ dày tá tràng cấp (K29) - Trào ngược dạ dày thực quản (K21)',
+    chan_doan_chuan: 'Viêm dạ dày cấp tính / Hội chứng trào ngược dạ dày thực quản',
     loi_dan_mac_dinh: 'Ăn đúng giờ, không bỏ bữa, kiêng rượu bia, cà phê, ớt cay, đồ chua. Tránh thức khuya và căng thẳng tâm lý.',
     ghi_chu: 'Phác đồ 7 ngày giảm tiết acid và bảo vệ niêm mạc dạ dày',
     chi_tiet: [
@@ -365,7 +365,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 4,
     ten_benh: 'Rối loạn tiêu hóa / Tiêu chảy cấp tính',
-    chan_doan_chuan: 'Viêm dạ dày ruột cấp / Tiêu chảy nhiễm khuẩn nhẹ (A09)',
+    chan_doan_chuan: 'Rối loạn tiêu hóa / Tiêu chảy cấp tính',
     loi_dan_mac_dinh: 'Ăn cháo loãng với muối/thịt nạc, uống nhiều dung dịch Oresol bù nước. Không ăn rau sống, thức ăn ôi thiu hay uống sữa đặc khi còn tiêu chảy.',
     ghi_chu: 'Phác đồ cầm tiêu chảy, diệt khuẩn đường ruột và bù nước điện giải',
     chi_tiet: [
@@ -378,7 +378,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 5,
     ten_benh: 'Đau đầu căng thẳng / Rối loạn vận mạch',
-    chan_doan_chuan: 'Đau đầu căng thẳng (G44.2) - Thiểu năng tuần hoàn não nhẹ do áp lực công việc',
+    chan_doan_chuan: 'Đau đầu căng thẳng / Rối loạn vận mạch',
     loi_dan_mac_dinh: 'Bố trí thời gian nghỉ ngơi hợp lý, không làm việc liên tục quá 2 giờ trước màn hình máy tính. Đi ngủ trước 23h, massage vùng thái dương gáy.',
     ghi_chu: 'Dành cho cán bộ văn phòng, lập trình viên căng thẳng áp lực',
     chi_tiet: [
@@ -391,7 +391,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 6,
     ten_benh: 'Đau thắt lưng cấp / Hội chứng cổ vai cánh tay do vận động',
-    chan_doan_chuan: 'Đau lưng dưới cấp tính do co cứng cơ (M54.5) - Viêm cơ thắt lưng',
+    chan_doan_chuan: 'Đau thắt lưng cấp / Hội chứng cổ vai cánh tay do vận động',
     loi_dan_mac_dinh: 'Hạn chế mang vác vật nặng, không xoay vặn người đột ngột. Chườm ấm vùng thắt lưng 20 phút mỗi tối. Tập các bài tập kéo giãn cơ nhẹ nhàng.',
     ghi_chu: 'Kháng viêm giảm phù nề cơ xương khớp kết hợp vật lý trị liệu',
     chi_tiet: [
@@ -404,7 +404,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 7,
     ten_benh: 'Viêm quanh khớp vai / Đau vai gáy cấp',
-    chan_doan_chuan: 'Đau vai gáy (M53.1)',
+    chan_doan_chuan: 'Viêm quanh khớp vai / Đau vai gáy cấp',
     loi_dan_mac_dinh: 'Hạn chế vận động mạnh, chườm ấm vùng cổ vai, xoa bóp nhẹ nhàng. Ngồi đúng tư thế khi làm việc.',
     ghi_chu: 'Dành cho trường hợp đau mỏi cổ vai gáy do thoái hóa hoặc ngồi văn phòng',
     chi_tiet: [
@@ -416,7 +416,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 8,
     ten_benh: 'Tăng huyết áp vô căn (nguyên phát)',
-    chan_doan_chuan: 'Tăng huyết áp vô căn (I10)',
+    chan_doan_chuan: 'Tăng huyết áp vô căn (nguyên phát)',
     loi_dan_mac_dinh: 'Ăn nhạt, hạn chế đồ chiên xào nhiều mỡ, không uống rượu bia. Theo dõi huyết áp hàng ngày vào buổi sáng.',
     ghi_chu: 'Khám định kỳ và cấp thuốc huyết áp',
     chi_tiet: [
@@ -428,7 +428,7 @@ export const SEED_MAU_BENH: MauBenh[] = [
   {
     id: 9,
     ten_benh: 'Viêm da cơ địa / Dị ứng da',
-    chan_doan_chuan: 'Viêm da tiếp xúc dị ứng (L23)',
+    chan_doan_chuan: 'Viêm da cơ địa / Dị ứng da',
     loi_dan_mac_dinh: 'Tránh tiếp xúc hóa chất tẩy rửa, giữ ẩm da. Không gãi mạnh gây trầy xước bội nhiễm.',
     ghi_chu: 'Phác đồ điều trị viêm da, nổi mẩn ngứa dị ứng',
     chi_tiet: [

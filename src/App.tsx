@@ -73,9 +73,11 @@ export default function App() {
     const unsubscribe = sqliteService.subscribe(() => {
       const docs = sqliteService.getBacSiList();
       setDoctors(docs);
-      if (!currentDoctor && docs.length > 0) {
-        setCurrentDoctor(docs[0]);
-      }
+      setCurrentDoctor((prev) => {
+        if (!prev) return docs.length > 0 ? docs[0] : null;
+        const matched = docs.find((d) => d.id === prev.id);
+        return matched || (docs.length > 0 ? docs[0] : null);
+      });
       refreshBadges();
     });
 

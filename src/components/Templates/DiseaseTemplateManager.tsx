@@ -199,9 +199,18 @@ export const DiseaseTemplateManager: React.FC = () => {
 
   const handleSaveTemplate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTemplate.ten_benh?.trim()) return;
+    const tenBenh = editingTemplate.ten_benh?.trim();
+    if (!tenBenh) return;
 
-    sqliteService.saveMauBenh(editingTemplate, templateDetails);
+    const finalChanDoan = editingTemplate.chan_doan_chuan?.trim() || tenBenh;
+    sqliteService.saveMauBenh(
+      {
+        ...editingTemplate,
+        ten_benh: tenBenh,
+        chan_doan_chuan: finalChanDoan
+      },
+      templateDetails
+    );
     setIsModalOpen(false);
     loadData();
   };
@@ -412,9 +421,17 @@ export const DiseaseTemplateManager: React.FC = () => {
               required
               placeholder="VD: Cảm cúm thông thường / Viêm phế quản..."
               value={editingTemplate.ten_benh || ''}
-              onChange={(e) =>
-                setEditingTemplate({ ...editingTemplate, ten_benh: e.target.value })
-              }
+              onChange={(e) => {
+                const newTen = e.target.value;
+                const oldTen = editingTemplate.ten_benh || '';
+                const currChanDoan = editingTemplate.chan_doan_chuan || '';
+                const shouldSyncChanDoan = !currChanDoan || currChanDoan === oldTen;
+                setEditingTemplate({
+                  ...editingTemplate,
+                  ten_benh: newTen,
+                  chan_doan_chuan: shouldSyncChanDoan ? newTen : currChanDoan
+                });
+              }}
               className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:bg-white"
             />
           </div>

@@ -20,7 +20,7 @@ import { saveAs } from 'file-saver';
 import { HoSoKham } from '../types';
 import { docTienBangChu, ensureTrailingDot } from './docTienBangChu';
 import { getTreatmentDateRange } from './treatmentDate';
-import { getFormattedDonVi } from './formatDonVi';
+import { getFormattedDonVi, formatDonViCap1BacSiHeader } from './formatDonVi';
 
 // Helpers
 const formatDateVN = (dateStr?: string) => {
@@ -99,14 +99,13 @@ export async function exportBangKeToDocx(record: HoSoKham) {
     record.ten_don_vi_nhan_su
   );
 
-  // Doctor Level 1 Unit (Tiêu ngữ góc trái biến động theo bác sĩ đang khám, in hoa toàn bộ)
-  const donViCap1BacSi = (
+  // Doctor Level 1 Unit (Tiêu ngữ góc trái biến động theo bác sĩ đang khám, bỏ từ Vùng ở cuối nếu có)
+  const donViCap1BacSi = formatDonViCap1BacSiHeader(
     (record as any).doctor?.level1Unit ||
     (record as any).doctor?.ten_don_vi_cap_1 ||
     (record as any).ten_don_vi_cap_1_bac_si ||
-    record.ten_don_vi_cap_1 ||
-    'PHÒNG THAM MƯU'
-  ).toUpperCase();
+    record.ten_don_vi_cap_1
+  );
 
   // Signer names formatting: Chỉ binding duy nhất họ và tên (fullName), loại bỏ cấp bậc/chức vụ
   const tenNguoiBenhKy = record.ten_nhan_su || '';
@@ -120,7 +119,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
   // Column width constants (Total = 14500 dxa ~ 100% of printable area: 25.7cm = 14570 dxa)
   const colWidths = [700, 5200, 1400, 1100, 2000, 2400, 1700];
 
-  // Helper to build table cell with reduced padding (giảm 4pt chiều cao so với trước)
+  // Helper to build table cell with padding and 11pt font size
   const createTableCell = (
     text: string,
     width: number,
@@ -136,20 +135,20 @@ export async function exportBangKeToDocx(record: HoSoKham) {
       verticalAlign: VerticalAlign.CENTER,
       shading: shadingColor ? { fill: shadingColor, type: ShadingType.CLEAR } : undefined,
       margins: {
-        top: convertMillimetersToTwip(0.8), // Giảm 4pt chiều cao hàng
-        bottom: convertMillimetersToTwip(0.8),
-        left: convertMillimetersToTwip(1.8),
-        right: convertMillimetersToTwip(1.8),
+        top: convertMillimetersToTwip(0.35), // Chiều cao hàng tăng thêm 1px
+        bottom: convertMillimetersToTwip(0.35),
+        left: convertMillimetersToTwip(1.2),
+        right: convertMillimetersToTwip(1.2),
       },
       children: [
         new Paragraph({
           alignment: align,
-          spacing: { before: 0, after: 0, line: 220 }, // Giảm chiều cao dòng
+          spacing: { before: 0, after: 0, line: 200 },
           children: [
             new TextRun({
               text,
               font: FONT_FAMILY,
-              size: 22, // 11pt chuẩn bảng
+              size: 22, // 11pt (tăng 1 đơn vị theo yêu cầu)
               bold: isBold,
             }),
           ],
@@ -171,7 +170,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 0, after: 0, line: 240 },
+                spacing: { before: 0, after: 0, line: 220 },
                 children: [
                   new TextRun({
                     text: 'BTL VÙNG 5 HQ',
@@ -183,7 +182,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               }),
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 0, after: 0, line: 240 },
+                spacing: { before: 0, after: 0, line: 200 }, // Giảm khoảng cách khi xuống dòng
                 children: [
                   new TextRun({
                     text: donViCap1BacSi,
@@ -195,7 +194,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               }),
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 10, after: 0, line: 100 },
+                spacing: { before: 0, after: 0, line: 100 },
                 children: [
                   new TextRun({
                     text: '─────────',
@@ -554,8 +553,8 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               height: convertMillimetersToTwip(210),
             },
             margin: {
-              top: convertMillimetersToTwip(20), // 2.0cm
-              bottom: convertMillimetersToTwip(20), // 2.0cm
+              top: convertMillimetersToTwip(18), // 1.8cm theo yêu cầu
+              bottom: convertMillimetersToTwip(12), // 1.2cm theo yêu cầu
               left: convertMillimetersToTwip(25), // 2.5cm
               right: convertMillimetersToTwip(15), // 1.5cm
             },
@@ -590,12 +589,12 @@ export async function exportBangKeToDocx(record: HoSoKham) {
           headerTable,
 
           // Spacing
-          new Paragraph({ spacing: { before: 40, after: 40 } }),
+          new Paragraph({ spacing: { before: 20, after: 20 } }),
 
           // Tiêu đề chính
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 60, after: 140, line: 280 },
+            spacing: { before: 40, after: 100, line: 260 },
             children: [
               new TextRun({
                 text: 'BẢNG KÊ CHI PHÍ KHÁM BỆNH, CHỮA BỆNH CỦA QUÂN NHÂN TẠI QUÂN Y ĐƠN VỊ',
@@ -606,83 +605,83 @@ export async function exportBangKeToDocx(record: HoSoKham) {
             ],
           }),
 
-          // I. Hành chính (12pt theo yêu cầu)
+          // I. Hành chính (11pt theo yêu cầu - giảm 1 đơn vị)
           new Paragraph({
-            spacing: { before: 60, after: 40, line: 240 },
+            spacing: { before: 40, after: 20, line: 200 },
             children: [
               new TextRun({
                 text: 'I. Hành chính',
                 font: FONT_FAMILY,
-                size: 24, // 12pt chuẩn
+                size: 22, // 11pt (giảm 1 đơn vị)
                 bold: true,
               }),
             ],
           }),
 
-          // Dòng 1: Họ tên, Ngày sinh, Giới tính (12pt)
+          // Dòng 1: Họ tên, Ngày sinh, Giới tính (11pt)
           new Paragraph({
-            spacing: { before: 30, after: 30, line: 240 },
+            spacing: { before: 10, after: 10, line: 200 },
             children: [
-              new TextRun({ text: 'Họ tên người bệnh: ', font: FONT_FAMILY, size: 24 }),
+              new TextRun({ text: 'Họ tên người bệnh: ', font: FONT_FAMILY, size: 22 }),
               new TextRun({
                 text: (record.ten_nhan_su || '...................................................').toUpperCase(),
                 font: FONT_FAMILY,
-                size: 24,
+                size: 22,
                 bold: true,
               }),
-              new TextRun({ text: '           Ngày sinh: ', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: formatDateVN(record.ngay_sinh_nhan_su) || '................', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: '           Giới tính: ', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: record.gioi_tinh_nhan_su || 'Nam', font: FONT_FAMILY, size: 24 }),
+              new TextRun({ text: '           Ngày sinh: ', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: formatDateVN(record.ngay_sinh_nhan_su) || '................', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: '           Giới tính: ', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: record.gioi_tinh_nhan_su || 'Nam', font: FONT_FAMILY, size: 22 }),
             ],
           }),
 
-          // Dòng 2: Đơn vị (12pt)
+          // Dòng 2: Đơn vị (11pt)
           new Paragraph({
-            spacing: { before: 30, after: 30, line: 240 },
+            spacing: { before: 10, after: 10, line: 200 },
             children: [
-              new TextRun({ text: 'Đơn vị: ', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: donViDisplay, font: FONT_FAMILY, size: 24 }),
+              new TextRun({ text: 'Đơn vị: ', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: donViDisplay, font: FONT_FAMILY, size: 22 }),
             ],
           }),
 
-          // Dòng 3: Mã thẻ BHYT (12pt)
+          // Dòng 3: Mã thẻ BHYT (11pt)
           new Paragraph({
-            spacing: { before: 30, after: 30, line: 240 },
+            spacing: { before: 10, after: 10, line: 200 },
             children: [
-              new TextRun({ text: 'Mã thẻ BHYT: ', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: maTheBHYT, font: FONT_FAMILY, size: 24, bold: true }),
+              new TextRun({ text: 'Mã thẻ BHYT: ', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: maTheBHYT, font: FONT_FAMILY, size: 22, bold: true }),
             ],
           }),
 
-          // Dòng 4: Đến khám và điều trị (12pt)
+          // Dòng 4: Đến khám và điều trị (11pt)
           new Paragraph({
-            spacing: { before: 30, after: 30, line: 240 },
+            spacing: { before: 10, after: 10, line: 200 },
             children: [
-              new TextRun({ text: 'Đến khám và điều trị: ', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: tuNgay, font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: ' đến ngày ', font: FONT_FAMILY, size: 24 }),
-              new TextRun({ text: denNgay, font: FONT_FAMILY, size: 24 }),
+              new TextRun({ text: 'Đến khám và điều trị: ', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: tuNgay, font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: ' đến ngày ', font: FONT_FAMILY, size: 22 }),
+              new TextRun({ text: denNgay, font: FONT_FAMILY, size: 22 }),
             ],
           }),
 
-          // Dòng 5: Chẩn đoán (12pt)
+          // Dòng 5: Chẩn đoán (11pt)
           new Paragraph({
-            spacing: { before: 30, after: 80, line: 240 },
+            spacing: { before: 10, after: 40, line: 200 },
             children: [
-              new TextRun({ text: 'Chẩn đoán: ', font: FONT_FAMILY, size: 24 }),
+              new TextRun({ text: 'Chẩn đoán: ', font: FONT_FAMILY, size: 22 }),
               new TextRun({
                 text: chanDoanDisplay,
                 font: FONT_FAMILY,
-                size: 24,
+                size: 22,
                 bold: true,
               }),
             ],
           }),
 
-          // II. Chi phí khám, chữa bệnh (12pt chuẩn theo yêu cầu)
+          // II. Chi phí khám, chữa bệnh (12pt tiêu đề mục)
           new Paragraph({
-            spacing: { before: 60, after: 40, line: 240 },
+            spacing: { before: 40, after: 20, line: 200 },
             children: [
               new TextRun({
                 text: 'II. Chi phí khám, chữa bệnh',
@@ -698,7 +697,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
 
           // Phần 4: Số tiền bằng chữ (12pt chuẩn)
           new Paragraph({
-            spacing: { before: 80, after: 100, line: 240 },
+            spacing: { before: 30, after: 30, line: 200 }, // Giảm khoảng trống 3px
             children: [
               new TextRun({ text: 'Số tiền (viết bằng chữ): ', font: FONT_FAMILY, size: 24 }),
               new TextRun({
@@ -712,7 +711,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
           }),
 
           // Phần 5: Chân trang (Footer Chữ ký - 60pt khoảng trống)
-          new Paragraph({ spacing: { before: 40, after: 20 } }),
+          new Paragraph({ spacing: { before: 0, after: 0 } }),
           signatureTable,
         ],
       },

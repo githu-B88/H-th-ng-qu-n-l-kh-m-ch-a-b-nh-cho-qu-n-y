@@ -38,6 +38,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { exportBangKeToDocx } from '../../utils/exportBangKeDocx';
+import { isThamMuuDoctor, isPhongVung } from '../../utils/formatDonVi';
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
 
@@ -113,8 +114,38 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isExportingWord, setIsExportingWord] = useState(false);
 
+  const activeDoctor = currentDoctor || bacSiList.find((b) => b.id === activeDoctorId) || (bacSiList.length > 0 ? bacSiList[0] : null);
+  const isCurrentDoctorThamMuu = isThamMuuDoctor(activeDoctor);
+
+  const availableDonViCap1List = donViCap1List.filter((cq) => {
+    if (!activeDoctor) return true;
+    if (isCurrentDoctorThamMuu) {
+      return (
+        cq.id === 1 ||
+        cq.id === 2 ||
+        cq.id === 3 ||
+        isPhongVung(cq.ten) ||
+        /tham\s*mưu|tham\s*muu|chính\s*trị|chinh\s*tri|hậu\s*cần|hau\s*can|kỹ\s*thuật|ky\s*thuat/i.test(cq.ten)
+      );
+    }
+    const docCap1Id =
+      (activeDoctor as any)?.id_don_vi_cap_1 ||
+      (activeDoctor?.id_don_vi
+        ? donViCap2List.find((d) => d.id === activeDoctor.id_don_vi)?.id_don_vi_cap_1
+        : undefined);
+    if (docCap1Id) {
+      return cq.id === docCap1Id;
+    }
+    return true;
+  });
+
   const loadMasterData = () => {
-    setNhanSuList(sqliteService.getNhanSuList());
+    const currentDoc = currentDoctor || bacSiList.find((b) => b.id === activeDoctorId) || (bacSiList.length > 0 ? bacSiList[0] : null);
+    if (currentDoc?.id) {
+      setNhanSuList(sqliteService.getNhanSuByBacSi(currentDoc.id));
+    } else {
+      setNhanSuList(sqliteService.getNhanSuList());
+    }
     setDonViCap1List((sqliteService as any).getDonViCap1List());
     setDonViCap2List((sqliteService as any).getDonViCap2List());
     setThuocList(sqliteService.getThuocList());
@@ -129,7 +160,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
       loadMasterData();
     });
     return unsubscribe;
-  }, []);
+  }, [activeDoctorId, currentDoctor?.id, (currentDoctor as any)?.id_don_vi_cap_1]);
 
   useEffect(() => {
     if (preSelectedPatientId) {
@@ -506,13 +537,42 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
               <button
                 type="button"
                 id="quick-add-patient-btn"
-                onClick={() => setIsAddPatientModalOpen(true)}
+                onClick={() => {
+                  const currentDoc = currentDoctor || bacSiList.find((b) => b.id === activeDoctorId) || (bacSiList.length > 0 ? bacSiList[0] : null);
+                  const docCap1Id = (currentDoc as any)?.id_don_vi_cap_1 || (currentDoc?.id_don_vi ? donViCap2List.find(d => d.id === currentDoc.id_don_vi)?.id_don_vi_cap_1 : undefined);
+                  setNewPatient({
+                    gioi_tinh: 'Nam',
+                    id_don_vi_cap_1: docCap1Id
+                  });
+                  setIsAddPatientModalOpen(true);
+                }}
                 className="text-xs font-semibold text-sky-600 hover:text-sky-800 hover:underline flex items-center gap-1"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>+ Thêm nhanh</span>
               </button>
             </div>
+
+            {/* Active Doctor Unit Filtering Banner */}
+            {activeDoctor && (
+              <div className="flex items-center justify-between text-xs bg-slate-50 border border-slate-200/80 rounded-lg px-3 py-1.5 text-slate-600 gap-2 flex-wrap">
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span>Đơn vị cấp 1 Bác sĩ:</span>
+                  <strong className="text-slate-800 uppercase font-semibold">
+                    {activeDoctor.ten_don_vi_cap_1 || (activeDoctor.id_don_vi ? donViCap2List.find(d => d.id === activeDoctor.id_don_vi)?.ten_don_vi_cap_1 : '') || 'Phòng Tham mưu'}
+                  </strong>
+                  {isCurrentDoctorThamMuu && (
+                    <span className="text-[11px] text-sky-700 bg-sky-100/80 border border-sky-200 rounded px-1.5 py-0.5 font-medium">
+                      Khám cả 3 Phòng: Tham mưu, Chính trị, Hậu cần - Kỹ thuật
+                    </span>
+                  )}
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                  (Lọc {filteredPatients.length} cán bộ)
+                </span>
+              </div>
+            )}
 
             {/* Smart Search / Dropdown */}
             <div className="relative">
@@ -1242,7 +1302,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                 >
                   <option value="">-- Chọn đơn vị cấp 1 --</option>
-                  {donViCap1List.map((cq) => (
+                  {availableDonViCap1List.map((cq) => (
                     <option key={cq.id} value={cq.id}>
                       {cq.ten}
                     </option>

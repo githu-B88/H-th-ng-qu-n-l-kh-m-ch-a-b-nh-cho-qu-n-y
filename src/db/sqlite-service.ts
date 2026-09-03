@@ -28,8 +28,8 @@ import {
   SEED_MAU_BENH,
   SEED_NGUOI_DUNG
 } from './seed-data';
-import { thuocData, vattuData, dichvuData } from './seedMedicalData';
-import { LIST_53_MAU_BENH, matchCatalogItem } from './seed53MauBenh';
+import defaultData from './defaultData.json';
+import { matchCatalogItem } from './seed53MauBenh';
 
 const DB_STORAGE_KEY = 'phong_kham_sqlite_db_v5';
 const DB_INDEXED_DB_NAME = 'PhongKhamOfflineDB_v5';
@@ -55,6 +55,8 @@ class SqliteService {
     }
   }
 
+  private notifyTimeout: any = null;
+
   public subscribe(listener: () => void) {
     this.listeners.push(listener);
     return () => {
@@ -63,13 +65,17 @@ class SqliteService {
   }
 
   public notify() {
-    this.listeners.forEach((l) => {
-      try {
-        l();
-      } catch (e) {
-        console.error('Listener notification error:', e);
-      }
-    });
+    if (this.notifyTimeout) return;
+    this.notifyTimeout = setTimeout(() => {
+      this.notifyTimeout = null;
+      this.listeners.forEach((l) => {
+        try {
+          l();
+        } catch (e) {
+          console.error('Listener notification error:', e);
+        }
+      });
+    }, 16);
   }
 
   private flushSyncBackup(): void {
@@ -90,7 +96,7 @@ class SqliteService {
     }
   }
 
-  // Save database binary to IndexedDB & localStorage with queueing / mutex
+  // Save database binary to IndexedDB with queueing / mutex without blocking localStorage conversion
   public async persistDatabase(): Promise<void> {
     if (!this.db) return;
 
@@ -162,14 +168,18 @@ class SqliteService {
   }
 
   private async saveToIndexedDB(data: Uint8Array): Promise<void> {
-    // 1. IndexedDB primary save
+    // 1. IndexedDB primary save (fast, non-blocking, handles large binary)
+    let idbSuccess = false;
     try {
       const idb = await this.openIndexedDB();
       await new Promise<void>((resolve, reject) => {
         const tx = idb.transaction(DB_STORE_NAME, 'readwrite');
         const store = tx.objectStore(DB_STORE_NAME);
         const req = store.put(data, 'main_db');
-        req.onsuccess = () => resolve();
+        req.onsuccess = () => {
+          idbSuccess = true;
+          resolve();
+        };
         req.onerror = () => reject(req.error);
         tx.onabort = () => reject(tx.error);
       });
@@ -177,19 +187,21 @@ class SqliteService {
       console.warn('IndexedDB write warning:', err);
     }
 
-    // 2. localStorage secondary backup
-    try {
-      if (data.length < 4800000) {
-        let binaryStr = '';
-        const chunkSize = 8192;
-        for (let i = 0; i < data.length; i += chunkSize) {
-          const chunk = data.subarray(i, i + chunkSize);
-          binaryStr += String.fromCharCode.apply(null, chunk as any);
+    // 2. localStorage secondary fallback ONLY if IndexedDB failed
+    if (!idbSuccess) {
+      try {
+        if (data.length < 4800000) {
+          let binaryStr = '';
+          const chunkSize = 8192;
+          for (let i = 0; i < data.length; i += chunkSize) {
+            const chunk = data.subarray(i, i + chunkSize);
+            binaryStr += String.fromCharCode.apply(null, chunk as any);
+          }
+          localStorage.setItem(DB_STORAGE_KEY, btoa(binaryStr));
         }
-        localStorage.setItem(DB_STORAGE_KEY, btoa(binaryStr));
+      } catch (e) {
+        console.warn('Fallback localStorage storage error:', e);
       }
-    } catch (e) {
-      console.warn('Fallback localStorage storage error:', e);
     }
   }
 
@@ -273,70 +285,50 @@ class SqliteService {
       if (savedData && savedData.length > 0) {
         try {
           this.db = new SQL.Database(savedData);
-          this.createTables();
-        
-          // Disable foreign keys temporarily during schema / seed synchronization
           this.db.run("PRAGMA foreign_keys = OFF;");
+          this.createTables();
 
-          // Migration: ensure don_vi_cap_1 and don_vi_cap_2 exist
-          const checkCap1 = this.db.exec("SELECT COUNT(*) as count FROM don_vi_cap_1");
-          const countCap1 = checkCap1.length > 0 ? Number(checkCap1[0].values[0][0]) : 0;
-          if (countCap1 === 0) {
-             for (const cap1 of SEED_DON_VI_CAP_1) {
-               this.db.run("INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) VALUES (?, ?, ?)",
-                 [cap1.id, cap1.ten, cap1.ghi_chu || '']
-               );
-             }
-             for (const cq of SEED_CO_QUAN) {
-               this.db.run("INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?, ?)",
-                 [cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '']
-               );
-             }
-          }
+          // Migration & Setup: ensure don_vi_cap_1 (6 fixed units) and don_vi_cap_2 (39 subunits) exist
+          this.ensureDefaultDonVi();
 
           // Ensure nguoi_dung has only the single admin account ban_quan_y
           this.db.run("DELETE FROM nguoi_dung WHERE ten_dang_nhap != 'ban_quan_y';");
           this.db.run(
             `INSERT OR REPLACE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai)
-             VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', 1, 1)`
+             VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', NULL, 1)`
           );
 
-          // Normalize any orphaned can_bo or bac_si to existing default unit (prevent FK fail)
-          this.db.run("UPDATE can_bo SET id_don_vi_cap_2 = 1 WHERE id_don_vi_cap_2 IS NOT NULL AND id_don_vi_cap_2 NOT IN (SELECT id FROM don_vi_cap_2);");
-          this.db.run("UPDATE bac_si SET id_don_vi = 15 WHERE id_don_vi IS NOT NULL AND id_don_vi NOT IN (SELECT id FROM don_vi_cap_2);");
-
-          // Clean any trailing semicolons from existing template names in database
-          try {
-            this.db.run("UPDATE mau_benh SET ten_benh = RTRIM(RTRIM(ten_benh, ' '), ';') WHERE ten_benh LIKE '%;';");
-          } catch (cleanErr) {
-            console.warn('Note on cleaning template names:', cleanErr);
-          }
-
-          // Ensure the 53 medical disease templates are fully initialized with FK mapping
-          const checkMauBenh = this.db.exec("SELECT COUNT(*) as count FROM mau_benh");
-          const countMauBenh = checkMauBenh.length > 0 ? Number(checkMauBenh[0].values[0][0]) : 0;
-
-          const checkChiTiet = this.db.exec("SELECT COUNT(*) as count FROM mau_benh_chi_tiet");
-          const countChiTiet = checkChiTiet.length > 0 ? Number(checkChiTiet[0].values[0][0]) : 0;
-          
-          if (countMauBenh < 50 || countChiTiet === 0) {
-            this.seed53DiseaseTemplatesInternal();
-          }
-
-          // Cleanup any orphan items from disease templates safely
-          this.cleanupMauBenhOrphans();
+          // Normalize any orphaned foreign keys safely to NULL (prevent FK fail)
+          this.db.run("UPDATE can_bo SET id_don_vi_cap_2 = NULL WHERE id_don_vi_cap_2 IS NOT NULL AND id_don_vi_cap_2 NOT IN (SELECT id FROM don_vi_cap_2);");
+          this.db.run("UPDATE bac_si SET id_don_vi = NULL WHERE id_don_vi IS NOT NULL AND id_don_vi NOT IN (SELECT id FROM don_vi_cap_2);");
+          this.db.run("UPDATE can_bo SET ma_the_bhyt = NULL WHERE ma_the_bhyt IS NOT NULL AND ma_the_bhyt NOT IN (SELECT ma_the_bhyt FROM the_bhyt);");
+          this.db.run("UPDATE ho_so_kham SET id_mau_benh = NULL WHERE id_mau_benh IS NOT NULL AND id_mau_benh NOT IN (SELECT id FROM mau_benh);");
+          this.db.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si IS NOT NULL AND id_bac_si NOT IN (SELECT id FROM bac_si);");
+          this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh WHERE chan_doan_chuan IS NULL OR chan_doan_chuan = '';");
 
           this.db.run("PRAGMA foreign_keys = ON;");
         } catch (e) {
-          console.warn('Error reading saved database, initializing without force wipe', e);
+          console.warn('Error reading saved database, initializing fresh tables with default units', e);
           this.db = new SQL.Database();
+          this.db.run("PRAGMA foreign_keys = OFF;");
           this.createTables();
-          this.seedInitialData(false);
+          this.ensureDefaultDonVi();
+          this.db.run(
+            `INSERT OR IGNORE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai)
+             VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', NULL, 1)`
+          );
+          this.db.run("PRAGMA foreign_keys = ON;");
         }
       } else {
         this.db = new SQL.Database();
+        this.db.run("PRAGMA foreign_keys = OFF;");
         this.createTables();
-        this.seedInitialData(false);
+        this.ensureDefaultDonVi();
+        this.db.run(
+          `INSERT OR IGNORE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai)
+           VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', NULL, 1)`
+        );
+        this.db.run("PRAGMA foreign_keys = ON;");
       }
 
       this.isInitialized = true;
@@ -354,8 +346,6 @@ class SqliteService {
 -- PHÒNG KHÁM NỘI BỘ CƠ QUAN - HỆ THỐNG CƠ SỞ DỮ LIỆU SQLITE (OFFLINE 100%)
 -- Tương thích hoàn toàn với Tauri / Electron & WebAssembly SQLite engine
 -- =========================================================================
-
-PRAGMA foreign_keys = ON;
 
 -- 1. BẢNG CƠ QUAN / PHÒNG BAN TRỰC THUỘC
 CREATE TABLE IF NOT EXISTS don_vi_cap_1 (
@@ -590,16 +580,8 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     if (!force) {
       const check = this.db.exec("SELECT COUNT(*) as count FROM don_vi_cap_2");
       if (check.length > 0 && Number(check[0].values[0][0]) > 0) {
-        // Ensure mau_benh has the 53 medical templates
-        const checkMauBenh = this.db.exec("SELECT COUNT(*) as count FROM mau_benh");
-        const countMauBenh = checkMauBenh.length > 0 ? Number(checkMauBenh[0].values[0][0]) : 0;
-        const checkChiTiet = this.db.exec("SELECT COUNT(*) as count FROM mau_benh_chi_tiet");
-        const countChiTiet = checkChiTiet.length > 0 ? Number(checkChiTiet[0].values[0][0]) : 0;
-        if (countMauBenh < 50 || countChiTiet === 0) {
-          this.seed53DiseaseTemplatesInternal();
-        }
         this.db.run("PRAGMA foreign_keys = ON;");
-        return; // already seeded
+        return; // already initialized
       }
     } else {
       // Clear all tables
@@ -656,7 +638,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
 
     // Insert Thuoc
-    for (const t of thuocData) {
+    for (const t of defaultData.thuoc) {
       this.db.run(
         `INSERT OR IGNORE INTO thuoc (ten, don_vi_tinh, don_gia, ghi_chu, ton_kho, ham_luong, cach_dung_mac_dinh)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -673,7 +655,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
 
     // Insert Vat Tu
-    for (const vt of vattuData) {
+    for (const vt of defaultData.vat_tu) {
       this.db.run(
         `INSERT OR IGNORE INTO vat_tu (ten, don_vi_tinh, don_gia, ghi_chu, ton_kho)
          VALUES (?, ?, ?, ?, ?)`,
@@ -682,7 +664,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
 
     // Insert Dich Vu KT
-    for (const dv of dichvuData) {
+    for (const dv of defaultData.dich_vu) {
       this.db.run(
         `INSERT OR IGNORE INTO dich_vu_kt (ten, don_vi_tinh, don_gia, ghi_chu)
          VALUES (?, ?, ?, ?)`,
@@ -818,17 +800,55 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
   }
 
-  // ===================== CRUD CO QUAN =====================
+  // ===================== CRUD CO QUAN & DON VI =====================
+  public ensureDefaultDonVi(): void {
+    if (!this.db) return;
+    try {
+      for (const cap1 of SEED_DON_VI_CAP_1) {
+        this.db.run(
+          "INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) VALUES (?, ?, ?)",
+          [cap1.id, cap1.ten, cap1.ghi_chu || '']
+        );
+        this.db.run(
+          "UPDATE don_vi_cap_1 SET ten = ?, ghi_chu = ? WHERE id = ?",
+          [cap1.ten, cap1.ghi_chu || '', cap1.id]
+        );
+      }
+      for (const cq of SEED_CO_QUAN) {
+        this.db.run(
+          "INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?, ?)",
+          [cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '']
+        );
+        this.db.run(
+          "UPDATE don_vi_cap_2 SET id_don_vi_cap_1 = ?, ten = ?, ghi_chu = ? WHERE id = ?",
+          [cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '', cq.id]
+        );
+      }
+    } catch (err) {
+      console.warn('ensureDefaultDonVi error:', err);
+    }
+  }
+
   public getCoQuanList(): any[] {
     return this.query<any>("SELECT id, id_don_vi_cap_1, ten as ten_co_quan, ghi_chu FROM don_vi_cap_2 ORDER BY id ASC");
   }
 
   public getDonViCap1List(): any[] {
-    return this.query<any>("SELECT * FROM don_vi_cap_1 ORDER BY id ASC");
+    let list = this.query<any>("SELECT * FROM don_vi_cap_1 ORDER BY id ASC");
+    if (list.length === 0) {
+      this.ensureDefaultDonVi();
+      list = this.query<any>("SELECT * FROM don_vi_cap_1 ORDER BY id ASC");
+    }
+    return list;
   }
 
   public getDonViCap2List(): any[] {
-    return this.query<any>("SELECT * FROM don_vi_cap_2 ORDER BY id ASC");
+    let list = this.query<any>("SELECT * FROM don_vi_cap_2 ORDER BY id ASC");
+    if (list.length === 0) {
+      this.ensureDefaultDonVi();
+      list = this.query<any>("SELECT * FROM don_vi_cap_2 ORDER BY id ASC");
+    }
+    return list;
   }
 
   public getTheBHYT(ma_the: string): any {
@@ -861,7 +881,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   // ===================== CRUD BAC SI =====================
   public getBacSiList(): BacSi[] {
     return this.query<BacSi>(`
-      SELECT bs.*, d2.ten as ten_don_vi, d1.ten as ten_don_vi_cap_1 
+      SELECT bs.*, d2.ten as ten_don_vi, d2.id_don_vi_cap_1, d1.id as id_don_vi_cap_1, d1.ten as ten_don_vi_cap_1 
       FROM bac_si bs 
       LEFT JOIN don_vi_cap_2 d2 ON bs.id_don_vi = d2.id 
       LEFT JOIN don_vi_cap_1 d1 ON d2.id_don_vi_cap_1 = d1.id
@@ -869,47 +889,97 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     `);
   }
 
-  public saveBacSi(bs: Partial<BacSi>): boolean {
-    if (bs.id) {
-      return this.run(
-        `UPDATE bac_si SET
-           ho_ten = ?, the_bhyt = ?, ngay_sinh = ?, gioi_tinh = ?,
-           id_don_vi = ?, chuyen_mon = ?, ghi_chu = ?
-         WHERE id = ?`,
-        [
-          bs.ho_ten || '',
-          bs.the_bhyt || '',
-          bs.ngay_sinh || '',
-          bs.gioi_tinh || 'Nam',
-          bs.id_don_vi || null,
-          bs.chuyen_mon || '',
-          bs.ghi_chu || '',
-          bs.id
-        ]
-      ).success;
-    } else {
-      return this.run(
-        `INSERT OR IGNORE INTO bac_si (ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          bs.ho_ten || '',
-          bs.the_bhyt || '',
-          bs.ngay_sinh || '',
-          bs.gioi_tinh || 'Nam',
-          bs.id_don_vi || null,
-          bs.chuyen_mon || '',
-          bs.ghi_chu || ''
-        ]
-      ).success;
+  public getBacSiById(id: number): BacSi | null {
+    const list = this.query<BacSi>(`
+      SELECT bs.*, d2.ten as ten_don_vi, d2.id_don_vi_cap_1, d1.id as id_don_vi_cap_1, d1.ten as ten_don_vi_cap_1 
+      FROM bac_si bs 
+      LEFT JOIN don_vi_cap_2 d2 ON bs.id_don_vi = d2.id 
+      LEFT JOIN don_vi_cap_1 d1 ON d2.id_don_vi_cap_1 = d1.id
+      WHERE bs.id = ?
+    `, [id]);
+    return list.length > 0 ? list[0] : null;
+  }
+
+  public saveBacSi(bs: Partial<BacSi>): { success: boolean; id?: number; error?: string } {
+    if (!this.db) return { success: false, error: 'Database not initialized' };
+    const hoTen = (bs.ho_ten || '').trim();
+    if (!hoTen) return { success: false, error: 'Họ tên bác sĩ không được để trống' };
+
+    try {
+      if (bs.id) {
+        this.db.run(
+          `UPDATE bac_si SET
+             ho_ten = ?, the_bhyt = ?, ngay_sinh = ?, gioi_tinh = ?,
+             id_don_vi = ?, chuyen_mon = ?, ghi_chu = ?
+           WHERE id = ?`,
+          [
+            hoTen,
+            (bs.the_bhyt || '').trim(),
+            bs.ngay_sinh || '',
+            bs.gioi_tinh || 'Nam',
+            bs.id_don_vi ? Number(bs.id_don_vi) : null,
+            (bs.chuyen_mon || '').trim(),
+            (bs.ghi_chu || '').trim(),
+            Number(bs.id)
+          ]
+        );
+        this.persistDatabase();
+        return { success: true, id: Number(bs.id) };
+      } else {
+        this.db.run(
+          `INSERT INTO bac_si (ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            hoTen,
+            (bs.the_bhyt || '').trim(),
+            bs.ngay_sinh || '',
+            bs.gioi_tinh || 'Nam',
+            bs.id_don_vi ? Number(bs.id_don_vi) : null,
+            (bs.chuyen_mon || '').trim(),
+            (bs.ghi_chu || '').trim()
+          ]
+        );
+        const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id");
+        const newId = Number(lastIdRes[0]?.values[0]?.[0]);
+        this.persistDatabase();
+        return { success: true, id: newId };
+      }
+    } catch (err: any) {
+      console.error('saveBacSi error:', err);
+      return { success: false, error: err.message || 'Lỗi khi lưu thông tin Bác sĩ' };
     }
   }
 
-  public deleteBacSi(id: number): boolean {
-    return this.run("DELETE FROM bac_si WHERE id = ?", [id]).success;
+  public deleteBacSi(id: number): { success: boolean; error?: string } {
+    if (!this.db) return { success: false, error: 'Database not initialized' };
+    try {
+      const remainingDocs = this.query<{ id: number }>("SELECT id FROM bac_si WHERE id != ?", [id]);
+      if (remainingDocs.length === 0) {
+        return { success: false, error: 'Phòng khám cần giữ lại tối thiểu 1 Bác sĩ / Y sĩ!' };
+      }
+      const fallbackDocId = remainingDocs[0].id;
+
+      // Safe deletion with Foreign Key handling
+      this.db.run("PRAGMA foreign_keys = OFF;");
+      this.db.run("UPDATE ho_so_kham SET id_bac_si = ? WHERE id_bac_si = ?", [fallbackDocId, id]);
+      this.db.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si = ?", [id]);
+      this.db.run("DELETE FROM bac_si WHERE id = ?", [id]);
+      this.db.run("PRAGMA foreign_keys = ON;");
+
+      this.persistDatabase();
+      return { success: true };
+    } catch (err: any) {
+      console.error('deleteBacSi error:', err);
+      return { success: false, error: err.message || 'Lỗi khi xóa Bác sĩ' };
+    }
   }
 
   // ===================== CRUD NHAN SU (BENH NHAN) =====================
-  public getNhanSuList(search = '', idDonViCap1?: number): NhanSu[] {
+  public getNhanSuList(
+    search = '',
+    idDonViCap1?: number | number[] | null,
+    tenDonViCap1?: string | string[] | null
+  ): NhanSu[] {
     let sql = `
       SELECT 
         ns.*, 
@@ -924,6 +994,38 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     `;
     const params: SqlValue[] = [];
 
+    if (Array.isArray(idDonViCap1) && idDonViCap1.length > 0) {
+      const placeholders = idDonViCap1.map(() => '?').join(', ');
+      sql += ` AND (d1.id IN (${placeholders}) OR d2.id_don_vi_cap_1 IN (${placeholders}))`;
+      params.push(...idDonViCap1.map(Number), ...idDonViCap1.map(Number));
+    } else if (idDonViCap1 && typeof idDonViCap1 === 'number') {
+      sql += ` AND (d1.id = ? OR d2.id_don_vi_cap_1 = ?)`;
+      params.push(Number(idDonViCap1), Number(idDonViCap1));
+    } else if (Array.isArray(tenDonViCap1) && tenDonViCap1.length > 0) {
+      const orClauses = tenDonViCap1
+        .map(
+          () => `(
+        LOWER(TRIM(d1.ten)) = LOWER(TRIM(?))
+        OR LOWER(TRIM(REPLACE(d1.ten, ' Vùng', ''))) = LOWER(TRIM(REPLACE(?, ' Vùng', '')))
+        OR LOWER(TRIM(d1.ten)) LIKE LOWER(TRIM(?))
+      )`
+        )
+        .join(' OR ');
+      sql += ` AND (${orClauses})`;
+      tenDonViCap1.forEach((t) => {
+        const cleanName = `%${t.trim().replace(/\s+Vùng$/i, '')}%`;
+        params.push(t.trim(), t.trim(), cleanName);
+      });
+    } else if (tenDonViCap1 && typeof tenDonViCap1 === 'string' && tenDonViCap1.trim()) {
+      sql += ` AND (
+        LOWER(TRIM(d1.ten)) = LOWER(TRIM(?))
+        OR LOWER(TRIM(REPLACE(d1.ten, ' Vùng', ''))) = LOWER(TRIM(REPLACE(?, ' Vùng', '')))
+        OR LOWER(TRIM(d1.ten)) LIKE LOWER(TRIM(?))
+      )`;
+      const cleanName = `%${tenDonViCap1.trim().replace(/\s+Vùng$/i, '')}%`;
+      params.push(tenDonViCap1.trim(), tenDonViCap1.trim(), cleanName);
+    }
+
     if (search && search.trim()) {
       const term = `%${search.trim().toLowerCase()}%`;
       sql += ` AND (
@@ -937,13 +1039,55 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       params.push(term, term, term, term, term, term);
     }
 
-    if (idDonViCap1) {
-      sql += ` AND (d1.id = ? OR d2.id_don_vi_cap_1 = ?)`;
-      params.push(idDonViCap1, idDonViCap1);
-    }
-
     sql += ` ORDER BY ns.id DESC`;
     return this.query<NhanSu>(sql, params);
+  }
+
+  public getNhanSuByBacSi(idBacSi: number, search = ''): NhanSu[] {
+    const doc = this.getBacSiById(idBacSi);
+    if (doc) {
+      const idDonViCap1 = (doc as any).id_don_vi_cap_1;
+      const tenDonViCap1 = (doc as any).ten_don_vi_cap_1 || '';
+      const tenDonViCap2 = (doc as any).ten_don_vi || '';
+
+      // Tinh chỉnh quy tắc logic:
+      // Nếu Bác sĩ thuộc Phòng Tham mưu Vùng -> Cho phép khám cả 3 Phòng Vùng:
+      // 1. Phòng Tham mưu Vùng (hoặc Phòng Tham mưu)
+      // 2. Phòng Chính trị Vùng (hoặc Phòng Chính trị)
+      // 3. Phòng Hậu cần-Kỹ thuật Vùng (hoặc Phòng Hậu cần-Kỹ thuật)
+      const isThamMuu =
+        idDonViCap1 === 1 ||
+        /tham\s*mưu|tham\s*muu/i.test(tenDonViCap1) ||
+        /tham\s*mưu|tham\s*muu/i.test(tenDonViCap2) ||
+        /tác\s*chiến|quan\s*lực|quân\s*lực|quân\s*huấn|thông\s*tin|trinh\s*sát|cơ\s*yếu|hành\s*chính/i.test(
+          tenDonViCap2
+        );
+
+      if (isThamMuu) {
+        // Lấy danh sách ID đơn vị cấp 1 của cả 3 phòng
+        const cap1Rooms = this.query<{ id: number }>(`
+          SELECT id FROM don_vi_cap_1 
+          WHERE id IN (1, 2, 3) 
+             OR LOWER(ten) LIKE '%tham mưu%' 
+             OR LOWER(ten) LIKE '%tham muu%'
+             OR LOWER(ten) LIKE '%chính trị%' 
+             OR LOWER(ten) LIKE '%chinh tri%'
+             OR LOWER(ten) LIKE '%hậu cần%'
+             OR LOWER(ten) LIKE '%hau can%'
+             OR LOWER(ten) LIKE '%kỹ thuật%'
+             OR LOWER(ten) LIKE '%ky thuat%'
+        `);
+        const allowedIds = cap1Rooms.map((r) => r.id);
+        const uniqueIds = Array.from(new Set([...allowedIds, 1, 2, 3]));
+        return this.getNhanSuList(search, uniqueIds);
+      }
+
+      // Các Bác sĩ thuộc đơn vị khác (Tiểu đoàn 553, 563, v.v.): giữ nguyên lọc theo đúng đơn vị của bác sĩ
+      if (idDonViCap1 || tenDonViCap1) {
+        return this.getNhanSuList(search, idDonViCap1, tenDonViCap1);
+      }
+    }
+    return this.getNhanSuList(search);
   }
 
   public getNhanSuById(id: number): NhanSu | null {
@@ -1174,15 +1318,22 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
 
     try {
+      this.db.run("PRAGMA foreign_keys = OFF;");
       // YÊU CẦU 1: XÓA DỮ LIỆU CŨ (RESET)
       this.db.run("DELETE FROM thuoc;");
       this.db.run("DELETE FROM vat_tu;");
       this.db.run("DELETE FROM dich_vu_kt;");
 
-      // YÊU CẦU 2 & 3: DUYỆT VÒNG LẶP VÀ CHÈN DỮ LIỆU ĐÃ CHUẨN HÓA
-      // 1. Duyệt qua thuocData
+      try {
+        this.db.run("DELETE FROM sqlite_sequence WHERE name IN ('thuoc', 'vat_tu', 'dich_vu_kt');");
+      } catch (seqErr) {
+        console.warn('sqlite_sequence reset note:', seqErr);
+      }
+
+      // YÊU CẦU 2 & 3: DUYỆT VÒNG LẶP VÀ CHÈN DỮ LIỆU ĐÃ CHUẨN HÓA TỪ DEFAULTDATA.JSON
+      // 1. Duyệt qua defaultData.thuoc
       let thuocCount = 0;
-      for (const item of thuocData) {
+      for (const item of defaultData.thuoc) {
         this.db.run(
           `INSERT INTO thuoc (ten, don_vi_tinh, don_gia, ton_kho, ham_luong, cach_dung_mac_dinh, ghi_chu)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -1199,9 +1350,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         thuocCount++;
       }
 
-      // 2. Duyệt qua vattuData
+      // 2. Duyệt qua defaultData.vat_tu
       let vatTuCount = 0;
-      for (const item of vattuData) {
+      for (const item of defaultData.vat_tu) {
         this.db.run(
           `INSERT INTO vat_tu (ten, don_vi_tinh, don_gia, ton_kho, ghi_chu)
            VALUES (?, ?, ?, ?, ?)`,
@@ -1216,9 +1367,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         vatTuCount++;
       }
 
-      // 3. Duyệt qua dichvuData
+      // 3. Duyệt qua defaultData.dich_vu
       let dichVuCount = 0;
-      for (const item of dichvuData) {
+      for (const item of defaultData.dich_vu) {
         this.db.run(
           `INSERT INTO dich_vu_kt (ten, don_vi_tinh, don_gia, ghi_chu)
            VALUES (?, ?, ?, ?)`,
@@ -1232,6 +1383,11 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         dichVuCount++;
       }
 
+      // Tự động kiểm tra và đồng bộ lại khóa ngoại trong mau_benh_chi_tiet nếu có
+      this.cleanupMauBenhOrphans();
+
+      this.db.run("PRAGMA foreign_keys = ON;");
+
       // Lưu trữ cơ sở dữ liệu và thông báo đồng bộ tất cả components
       this.persistDatabase();
       this.notify();
@@ -1242,7 +1398,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
       return {
         success: true,
-        message: `Đã nạp thành công: ${thuocCount} thuốc, ${vatTuCount} vật tư y tế, ${dichVuCount} dịch vụ kỹ thuật.`,
+        message: `Đã nạp và cập nhật thành công: ${thuocCount} thuốc, ${vatTuCount} vật tư y tế, ${dichVuCount} dịch vụ kỹ thuật.`,
         counts: {
           thuoc: thuocCount,
           vatTu: vatTuCount,
@@ -1254,6 +1410,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       };
     } catch (err: any) {
       console.error('Lỗi khi nạp dữ liệu danh mục y tế:', err);
+      try {
+        this.db.run("PRAGMA foreign_keys = ON;");
+      } catch (e) {}
       return {
         success: false,
         message: `Lỗi: ${err.message || 'Không thể nạp dữ liệu danh mục'}`,
@@ -1268,17 +1427,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   // ===================== CRUD MAU BENH (DISEASE TEMPLATES) =====================
   public getMauBenhList(): MauBenh[] {
     if (!this.db) return [];
-    let list = this.query<MauBenh>("SELECT * FROM mau_benh ORDER BY id ASC");
-    const checkChiTiet = this.query<{ count: number }>("SELECT COUNT(*) as count FROM mau_benh_chi_tiet");
-    const countChiTiet = checkChiTiet.length > 0 ? Number(checkChiTiet[0].count) : 0;
-
-    // Auto-seed if templates are missing or detailed items are missing
-    if (list.length === 0 || countChiTiet === 0) {
-      this.seed53DiseaseTemplatesInternal();
-      this.persistDatabase();
-      list = this.query<MauBenh>("SELECT * FROM mau_benh ORDER BY id ASC");
-    }
-
+    const list = this.query<MauBenh>("SELECT * FROM mau_benh ORDER BY id ASC");
     if (list.length === 0) return [];
 
     const thuocs = this.getThuocList();
@@ -1381,7 +1530,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     const idNumParam = Number(idMauBenh);
     if (!idNumParam || !this.db) return [];
 
-    let rows = this.query<any>(
+    const rows = this.query<any>(
       `SELECT 
         mbc.id,
         mbc.id_mau_benh,
@@ -1408,149 +1557,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       [idNumParam]
     );
 
-    if (rows.length === 0) {
-      const checkTotal = this.query<{ count: number }>("SELECT COUNT(*) as count FROM mau_benh_chi_tiet");
-      if (checkTotal.length === 0 || Number(checkTotal[0].count) === 0) {
-        this.seed53DiseaseTemplatesInternal();
-        this.persistDatabase();
-        rows = this.query<any>(
-          `SELECT 
-            mbc.id,
-            mbc.id_mau_benh,
-            mbc.loai_muc,
-            mbc.id_muc,
-            mbc.so_luong,
-            mbc.cach_dung,
-            mbc.ghi_chu,
-            t.ten as ten_thuoc,
-            t.don_vi_tinh as dvt_thuoc,
-            t.don_gia as gia_thuoc,
-            v.ten as ten_vat_tu,
-            v.don_vi_tinh as dvt_vat_tu,
-            v.don_gia as gia_vat_tu,
-            d.ten as ten_dich_vu,
-            d.don_vi_tinh as dvt_dich_vu,
-            d.don_gia as gia_dich_vu
-           FROM mau_benh_chi_tiet mbc
-           LEFT JOIN thuoc t ON mbc.id_muc = t.id AND mbc.loai_muc = 'thuoc'
-           LEFT JOIN vat_tu v ON mbc.id_muc = v.id AND mbc.loai_muc = 'vat_tu'
-           LEFT JOIN dich_vu_kt d ON mbc.id_muc = d.id AND mbc.loai_muc IN ('dich_vu_kt', 'dich_vu', 'dich_vu_ky_thuat')
-           WHERE mbc.id_mau_benh = ?
-           ORDER BY mbc.id ASC`,
-          [idNumParam]
-        );
-      } else {
-        // Find if this template exists in 53 master templates and populate its items
-        const tplRow = this.query<{ id: number; ten_benh: string; chan_doan_chuan: string }>(
-          "SELECT id, ten_benh, chan_doan_chuan FROM mau_benh WHERE id = ?",
-          [idNumParam]
-        );
-        if (tplRow.length > 0) {
-          const tenBenh = tplRow[0].ten_benh.toLowerCase().trim();
-          const foundSeedTpl = LIST_53_MAU_BENH.find(
-            (s) => s.ten_benh.toLowerCase().trim() === tenBenh || (s.chan_doan_chuan && s.chan_doan_chuan.toLowerCase().trim() === tenBenh)
-          ) || (idNumParam >= 1 && idNumParam <= LIST_53_MAU_BENH.length ? LIST_53_MAU_BENH[idNumParam - 1] : null);
-
-          if (foundSeedTpl) {
-            const thuocs = this.getThuocList();
-            const vatTus = this.getVatTuList();
-            const dichVus = this.getDichVuKTList();
-
-            if (foundSeedTpl.thuoc) {
-              for (const item of foundSeedTpl.thuoc) {
-                let mThuoc = matchCatalogItem(item.ten, thuocs);
-                let targetId = mThuoc ? Number(mThuoc.id) : 0;
-                let loaiMuc = 'thuoc';
-                if (!targetId) {
-                  this.db.run(
-                    "INSERT INTO thuoc (ma_thuoc, ten, don_vi_tinh, don_gia, ton_kho, cach_dung_mac_dinh) VALUES (?, ?, ?, ?, ?, ?)",
-                    [`T_${Date.now()}_${Math.floor(Math.random()*1000)}`, item.ten, item.don_vi_tinh || 'Viên', item.don_gia || 0, 1000, item.cach_dung || '']
-                  );
-                  const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id;");
-                  targetId = lastIdRes.length > 0 ? Number(lastIdRes[0].values[0][0]) : 0;
-                  thuocs.push({ id: targetId, ten: item.ten, don_vi_tinh: item.don_vi_tinh || 'Viên', don_gia: item.don_gia || 0 } as any);
-                }
-                this.db.run(
-                  `INSERT INTO mau_benh_chi_tiet (id_mau_benh, loai_muc, id_muc, so_luong, cach_dung, ghi_chu)
-                   VALUES (?, ?, ?, ?, ?, ?)`,
-                  [idNumParam, loaiMuc, targetId, item.so_luong || 1, item.cach_dung || '', item.ghi_chu || '']
-                );
-              }
-            }
-            if (foundSeedTpl.vat_tu) {
-              for (const item of foundSeedTpl.vat_tu) {
-                let mVatTu = matchCatalogItem(item.ten, vatTus);
-                let targetId = mVatTu ? Number(mVatTu.id) : 0;
-                let loaiMuc = 'vat_tu';
-                if (!targetId) {
-                  this.db.run(
-                    "INSERT INTO vat_tu (ma_vat_tu, ten, don_vi_tinh, don_gia, ton_kho) VALUES (?, ?, ?, ?, ?)",
-                    [`VT_${Date.now()}_${Math.floor(Math.random()*1000)}`, item.ten, item.don_vi_tinh || 'Cái', item.don_gia || 0, 1000]
-                  );
-                  const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id;");
-                  targetId = lastIdRes.length > 0 ? Number(lastIdRes[0].values[0][0]) : 0;
-                  vatTus.push({ id: targetId, ten: item.ten, don_vi_tinh: item.don_vi_tinh || 'Cái', don_gia: item.don_gia || 0 } as any);
-                }
-                this.db.run(
-                  `INSERT INTO mau_benh_chi_tiet (id_mau_benh, loai_muc, id_muc, so_luong, cach_dung, ghi_chu)
-                   VALUES (?, ?, ?, ?, ?, ?)`,
-                  [idNumParam, loaiMuc, targetId, item.so_luong || 1, item.cach_dung || '', item.ghi_chu || '']
-                );
-              }
-            }
-            if (foundSeedTpl.dich_vu) {
-              for (const item of foundSeedTpl.dich_vu) {
-                let mDichVu = matchCatalogItem(item.ten, dichVus);
-                let targetId = mDichVu ? Number(mDichVu.id) : 0;
-                let loaiMuc = 'dich_vu_kt';
-                if (!targetId) {
-                  this.db.run(
-                    "INSERT INTO dich_vu_kt (ma_dich_vu, ten, don_vi_tinh, don_gia) VALUES (?, ?, ?, ?)",
-                    [`DV_${Date.now()}_${Math.floor(Math.random()*1000)}`, item.ten, item.don_vi_tinh || 'Lượt', item.don_gia || 0]
-                  );
-                  const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id;");
-                  targetId = lastIdRes.length > 0 ? Number(lastIdRes[0].values[0][0]) : 0;
-                  dichVus.push({ id: targetId, ten: item.ten, don_vi_tinh: item.don_vi_tinh || 'Lượt', don_gia: item.don_gia || 0 } as any);
-                }
-                this.db.run(
-                  `INSERT INTO mau_benh_chi_tiet (id_mau_benh, loai_muc, id_muc, so_luong, cach_dung, ghi_chu)
-                   VALUES (?, ?, ?, ?, ?, ?)`,
-                  [idNumParam, loaiMuc, targetId, item.so_luong || 1, item.cach_dung || '', item.ghi_chu || '']
-                );
-              }
-            }
-
-            this.persistDatabase();
-            rows = this.query<any>(
-              `SELECT 
-                mbc.id,
-                mbc.id_mau_benh,
-                mbc.loai_muc,
-                mbc.id_muc,
-                mbc.so_luong,
-                mbc.cach_dung,
-                mbc.ghi_chu,
-                t.ten as ten_thuoc,
-                t.don_vi_tinh as dvt_thuoc,
-                t.don_gia as gia_thuoc,
-                v.ten as ten_vat_tu,
-                v.don_vi_tinh as dvt_vat_tu,
-                v.don_gia as gia_vat_tu,
-                d.ten as ten_dich_vu,
-                d.don_vi_tinh as dvt_dich_vu,
-                d.don_gia as gia_dich_vu
-               FROM mau_benh_chi_tiet mbc
-               LEFT JOIN thuoc t ON mbc.id_muc = t.id AND mbc.loai_muc = 'thuoc'
-               LEFT JOIN vat_tu v ON mbc.id_muc = v.id AND mbc.loai_muc = 'vat_tu'
-               LEFT JOIN dich_vu_kt d ON mbc.id_muc = d.id AND mbc.loai_muc IN ('dich_vu_kt', 'dich_vu', 'dich_vu_ky_thuat')
-               WHERE mbc.id_mau_benh = ?
-               ORDER BY mbc.id ASC`,
-              [idNumParam]
-            );
-          }
-        }
-      }
-    }
+    if (rows.length === 0) return [];
 
     const thuocs = this.getThuocList();
     const vatTus = this.getVatTuList();
@@ -1606,16 +1613,19 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     if (!this.db) return false;
 
     let idMauBenh = mb.id;
+    const tenBenh = (mb.ten_benh || '').trim();
+    const chanDoanChuan = (mb.chan_doan_chuan && mb.chan_doan_chuan.trim()) ? mb.chan_doan_chuan.trim() : tenBenh;
+
     if (idMauBenh) {
       this.run(
         "UPDATE mau_benh SET ten_benh = ?, chan_doan_chuan = ?, loi_dan_mac_dinh = ?, ghi_chu = ? WHERE id = ?",
-        [mb.ten_benh || '', mb.chan_doan_chuan || '', mb.loi_dan_mac_dinh || '', mb.ghi_chu || '', idMauBenh]
+        [tenBenh, chanDoanChuan, mb.loi_dan_mac_dinh || '', mb.ghi_chu || '', idMauBenh]
       );
       this.run("DELETE FROM mau_benh_chi_tiet WHERE id_mau_benh = ?", [idMauBenh]);
     } else {
       const res = this.run(
         "INSERT OR IGNORE INTO mau_benh (ten_benh, chan_doan_chuan, loi_dan_mac_dinh, ghi_chu) VALUES (?, ?, ?, ?)",
-        [mb.ten_benh || '', mb.chan_doan_chuan || '', mb.loi_dan_mac_dinh || '', mb.ghi_chu || '']
+        [tenBenh, chanDoanChuan, mb.loi_dan_mac_dinh || '', mb.ghi_chu || '']
       );
       if (!res.success || !res.lastInsertRowId) return false;
       idMauBenh = res.lastInsertRowId;
@@ -1640,7 +1650,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
             if (match.length > 0) {
               id_muc = match[0].id as number;
             } else {
-              const ins = this.run("INSERT INTO thuoc (ma_thuoc, ten, don_vi_tinh, don_gia) VALUES (?, ?, ?, ?)", [`AUTO_${Date.now()}_${Math.floor(Math.random()*1000)}`, ct.ten_muc, ct.don_vi_tinh || 'Lượt', ct.don_gia || 0]);
+              const ins = this.run("INSERT INTO thuoc (ten, don_vi_tinh, don_gia, ton_kho, cach_dung_mac_dinh) VALUES (?, ?, ?, ?, ?)", [ct.ten_muc, ct.don_vi_tinh || 'Viên', ct.don_gia || 0, 100, ct.cach_dung || '']);
               if (ins.success && ins.lastInsertRowId) id_muc = ins.lastInsertRowId;
             }
           }
@@ -1653,7 +1663,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
             if (match.length > 0) {
               id_muc = match[0].id as number;
             } else {
-              const ins = this.run("INSERT INTO vat_tu (ma_vat_tu, ten, don_vi_tinh, don_gia) VALUES (?, ?, ?, ?)", [`AUTO_${Date.now()}_${Math.floor(Math.random()*1000)}`, ct.ten_muc, ct.don_vi_tinh || 'Lượt', ct.don_gia || 0]);
+              const ins = this.run("INSERT INTO vat_tu (ten, don_vi_tinh, don_gia, ton_kho) VALUES (?, ?, ?, ?)", [ct.ten_muc, ct.don_vi_tinh || 'Cái', ct.don_gia || 0, 50]);
               if (ins.success && ins.lastInsertRowId) id_muc = ins.lastInsertRowId;
             }
           }
@@ -1666,7 +1676,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
             if (match.length > 0) {
               id_muc = match[0].id as number;
             } else {
-              const ins = this.run("INSERT INTO dich_vu_kt (ma_dich_vu, ten, don_vi_tinh, don_gia) VALUES (?, ?, ?, ?)", [`AUTO_${Date.now()}_${Math.floor(Math.random()*1000)}`, ct.ten_muc, ct.don_vi_tinh || 'Lượt', ct.don_gia || 0]);
+              const ins = this.run("INSERT INTO dich_vu_kt (ten, don_vi_tinh, don_gia) VALUES (?, ?, ?)", [ct.ten_muc, ct.don_vi_tinh || 'Lần', ct.don_gia || 0]);
               if (ins.success && ins.lastInsertRowId) id_muc = ins.lastInsertRowId;
             }
           }
@@ -1735,14 +1745,15 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       let totalItemCount = 0;
       const results: any[] = [];
 
-      for (const tpl of LIST_53_MAU_BENH) {
+      for (const tpl of (defaultData.mau_benh as any[])) {
         const cleanTenBenh = (tpl.ten_benh || '').replace(/;+\s*$/, '').trim();
+        const cleanChanDoan = (tpl.chan_doan_chuan && tpl.chan_doan_chuan.trim()) ? tpl.chan_doan_chuan.trim() : cleanTenBenh;
         this.db.run(
           `INSERT INTO mau_benh (ten_benh, chan_doan_chuan, loi_dan_mac_dinh, ghi_chu)
            VALUES (?, ?, ?, ?)`,
           [
             cleanTenBenh,
-            tpl.chan_doan_chuan || '',
+            cleanChanDoan,
             tpl.loi_dan_mac_dinh || '',
             tpl.ghi_chu || ''
           ]
@@ -1777,9 +1788,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
               targetId = Number(matchedDichVu.id);
             } else {
               // Auto-create missing thuoc
-              const ins = this.db.run(
-                "INSERT INTO thuoc (ma_thuoc, ten, don_vi_tinh, don_gia, ton_kho, cach_dung_mac_dinh) VALUES (?, ?, ?, ?, ?, ?)",
-                [`T_${Date.now()}_${Math.floor(Math.random()*1000)}`, item.ten, item.don_vi_tinh || 'Viên', item.don_gia || 0, 1000, item.cach_dung || '']
+              this.db.run(
+                "INSERT INTO thuoc (ten, don_vi_tinh, don_gia, ton_kho, cach_dung_mac_dinh) VALUES (?, ?, ?, ?, ?)",
+                [item.ten, item.don_vi_tinh || 'Viên', item.don_gia || 0, 1000, item.cach_dung || '']
               );
               const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id;");
               targetId = lastIdRes.length > 0 ? Number(lastIdRes[0].values[0][0]) : 0;
@@ -1817,9 +1828,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
               loaiMuc = 'dich_vu_kt';
               targetId = Number(matchedDichVu.id);
             } else {
-              const ins = this.db.run(
-                "INSERT INTO vat_tu (ma_vat_tu, ten, don_vi_tinh, don_gia, ton_kho) VALUES (?, ?, ?, ?, ?)",
-                [`VT_${Date.now()}_${Math.floor(Math.random()*1000)}`, item.ten, item.don_vi_tinh || 'Cái', item.don_gia || 0, 1000]
+              this.db.run(
+                "INSERT INTO vat_tu (ten, don_vi_tinh, don_gia, ton_kho) VALUES (?, ?, ?, ?)",
+                [item.ten, item.don_vi_tinh || 'Cái', item.don_gia || 0, 1000]
               );
               const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id;");
               targetId = lastIdRes.length > 0 ? Number(lastIdRes[0].values[0][0]) : 0;
@@ -1857,9 +1868,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
               loaiMuc = 'thuoc';
               targetId = Number(matchedThuoc.id);
             } else {
-              const ins = this.db.run(
-                "INSERT INTO dich_vu_kt (ma_dich_vu, ten, don_vi_tinh, don_gia) VALUES (?, ?, ?, ?)",
-                [`DV_${Date.now()}_${Math.floor(Math.random()*1000)}`, item.ten, item.don_vi_tinh || 'Lượt', item.don_gia || 0]
+              this.db.run(
+                "INSERT INTO dich_vu_kt (ten, don_vi_tinh, don_gia) VALUES (?, ?, ?)",
+                [item.ten, item.don_vi_tinh || 'Lượt', item.don_gia || 0]
               );
               const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id;");
               targetId = lastIdRes.length > 0 ? Number(lastIdRes[0].values[0][0]) : 0;
@@ -1971,12 +1982,15 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         dv1.id as id_don_vi_cap_1,
         dv1.ten as ten_don_vi_cap_1,
         bs.ho_ten as ten_bac_si,
+        dv1_bs.ten as ten_don_vi_cap_1_bac_si,
         mb.ten_benh as ten_mau_benh
       FROM ho_so_kham hs
       LEFT JOIN can_bo ns ON hs.id_nhan_su = ns.id
       LEFT JOIN don_vi_cap_2 cq ON ns.id_don_vi_cap_2 = cq.id
       LEFT JOIN don_vi_cap_1 dv1 ON cq.id_don_vi_cap_1 = dv1.id
       LEFT JOIN bac_si bs ON hs.id_bac_si = bs.id
+      LEFT JOIN don_vi_cap_2 cq_bs ON bs.id_don_vi = cq_bs.id
+      LEFT JOIN don_vi_cap_1 dv1_bs ON cq_bs.id_don_vi_cap_1 = dv1_bs.id
       LEFT JOIN mau_benh mb ON hs.id_mau_benh = mb.id
       WHERE 1=1
     `;
@@ -2164,12 +2178,15 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         dv1.id as id_don_vi_cap_1,
         dv1.ten as ten_don_vi_cap_1,
         bs.ho_ten as ten_bac_si,
+        dv1_bs.ten as ten_don_vi_cap_1_bac_si,
         mb.ten_benh as ten_mau_benh
       FROM ho_so_kham hs
       LEFT JOIN can_bo ns ON hs.id_nhan_su = ns.id
       LEFT JOIN don_vi_cap_2 cq ON ns.id_don_vi_cap_2 = cq.id
       LEFT JOIN don_vi_cap_1 dv1 ON cq.id_don_vi_cap_1 = dv1.id
       LEFT JOIN bac_si bs ON hs.id_bac_si = bs.id
+      LEFT JOIN don_vi_cap_2 cq_bs ON bs.id_don_vi = cq_bs.id
+      LEFT JOIN don_vi_cap_1 dv1_bs ON cq_bs.id_don_vi_cap_1 = dv1_bs.id
       LEFT JOIN mau_benh mb ON hs.id_mau_benh = mb.id
       WHERE hs.id = ?`,
       [id]
@@ -2220,12 +2237,24 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     let idNhanSu = hs.id_nhan_su;
     if (!idNhanSu) {
       const firstPatient = this.query<{ id: number }>("SELECT id FROM can_bo LIMIT 1");
-      idNhanSu = firstPatient[0]?.id || 1;
+      if (firstPatient.length > 0) {
+        idNhanSu = firstPatient[0].id;
+      } else {
+        this.db.run("INSERT INTO can_bo (ho_ten) VALUES ('Bệnh nhân')");
+        const pRes = this.db.exec("SELECT last_insert_rowid() as id;");
+        idNhanSu = pRes.length > 0 ? Number(pRes[0].values[0][0]) : 1;
+      }
     } else {
       const checkPatient = this.query("SELECT id FROM can_bo WHERE id = ?", [idNhanSu]);
       if (checkPatient.length === 0) {
         const firstPatient = this.query<{ id: number }>("SELECT id FROM can_bo LIMIT 1");
-        idNhanSu = firstPatient[0]?.id || 1;
+        if (firstPatient.length > 0) {
+          idNhanSu = firstPatient[0].id;
+        } else {
+          this.db.run("INSERT INTO can_bo (ho_ten) VALUES ('Bệnh nhân')");
+          const pRes = this.db.exec("SELECT last_insert_rowid() as id;");
+          idNhanSu = pRes.length > 0 ? Number(pRes[0].values[0][0]) : 1;
+        }
       }
     }
 
@@ -2233,12 +2262,24 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     let idBacSi = hs.id_bac_si;
     if (!idBacSi) {
       const firstDoc = this.query<{ id: number }>("SELECT id FROM bac_si LIMIT 1");
-      idBacSi = firstDoc[0]?.id || 1;
+      if (firstDoc.length > 0) {
+        idBacSi = firstDoc[0].id;
+      } else {
+        this.db.run("INSERT INTO bac_si (ho_ten, chuyen_mon) VALUES ('Bác sĩ phụ trách', 'Đa khoa')");
+        const docRes = this.db.exec("SELECT last_insert_rowid() as id;");
+        idBacSi = docRes.length > 0 ? Number(docRes[0].values[0][0]) : 1;
+      }
     } else {
       const checkDoc = this.query("SELECT id FROM bac_si WHERE id = ?", [idBacSi]);
       if (checkDoc.length === 0) {
         const firstDoc = this.query<{ id: number }>("SELECT id FROM bac_si LIMIT 1");
-        idBacSi = firstDoc[0]?.id || 1;
+        if (firstDoc.length > 0) {
+          idBacSi = firstDoc[0].id;
+        } else {
+          this.db.run("INSERT INTO bac_si (ho_ten, chuyen_mon) VALUES ('Bác sĩ phụ trách', 'Đa khoa')");
+          const docRes = this.db.exec("SELECT last_insert_rowid() as id;");
+          idBacSi = docRes.length > 0 ? Number(docRes[0].values[0][0]) : 1;
+        }
       }
     }
 

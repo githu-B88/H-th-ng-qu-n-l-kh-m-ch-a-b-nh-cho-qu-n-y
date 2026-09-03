@@ -47,6 +47,49 @@ export const isPhongVung = (tenCap1?: string | null): boolean => {
 };
 
 /**
+ * Kiểm tra xem Đơn vị có thuộc Phòng Tham mưu (hoặc Phòng Tham mưu Vùng) không
+ */
+export const isThamMuuUnit = (tenDonVi?: string | null): boolean => {
+  if (!tenDonVi) return false;
+  const norm = normalizeText(tenDonVi);
+  return (
+    norm.includes('tham muu') ||
+    norm === 'phong tm' ||
+    norm === 'phong tm vung' ||
+    norm.includes('tac chien') ||
+    norm.includes('quan luc') ||
+    norm.includes('quan huan')
+  );
+};
+
+/**
+ * Kiểm tra xem Bác sĩ có thuộc Phòng Tham mưu Vùng hay không
+ */
+export const isThamMuuDoctor = (doc: any): boolean => {
+  if (!doc) return false;
+  const cap1Id = Number(doc.id_don_vi_cap_1 || 0);
+  if (cap1Id === 1) return true;
+  if (isThamMuuUnit(doc.ten_don_vi_cap_1)) return true;
+  if (isThamMuuUnit(doc.ten_don_vi)) return true;
+  return false;
+};
+
+/**
+ * Tinh chỉnh tên Đơn vị cấp 1 của Bác sĩ khám hiển thị dưới dòng "BTL VÙNG 5 HQ":
+ * - Chỉ thay đổi nếu đơn vị nào có từ "Vùng" / "vùng" ở sau cùng (ví dụ "Phòng Tham mưu Vùng" -> "PHÒNG THAM MƯU", "Phòng Chính trị Vùng" -> "PHÒNG CHÍNH TRỊ", "Phòng Hậu cần-Kỹ thuật Vùng" -> "PHÒNG HẬU CẦN-KỸ THUẬT")
+ * - Các đơn vị khác (Tiểu đoàn 553, Tiểu đoàn 563, Tiểu đoàn Phương tiện không người lái, v.v.) giữ nguyên (ví dụ "TIỂU ĐOÀN 553").
+ */
+export const formatDonViCap1BacSiHeader = (rawUnit?: string | null): string => {
+  if (!rawUnit || !rawUnit.trim()) {
+    return 'PHÒNG THAM MƯU';
+  }
+  let unit = rawUnit.trim();
+  // Nếu có từ "vùng" / "Vùng" / "VÙNG" ở cuối chuỗi thì bỏ từ đó đi
+  unit = unit.replace(/\s+Vùng$/i, '').trim();
+  return unit.toUpperCase();
+};
+
+/**
  * Hàm helper xử lý chuỗi đơn vị hiển thị tại phần "I. Hành chính" của Bảng kê:
  * - Nếu tenCap1 thuộc 1 trong 3 phòng Vùng (Phòng Tham mưu, Phòng Chính trị, Phòng HC-KT):
  *   Trả về DUY NHẤT tên Đơn vị cấp 1 (Không hiển thị Đơn vị cấp 2).
