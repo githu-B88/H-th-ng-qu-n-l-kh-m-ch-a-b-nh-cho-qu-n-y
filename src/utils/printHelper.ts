@@ -41,7 +41,7 @@ export const printElement = (
     orientation === 'landscape'
       ? `@page {
           size: A4 landscape;
-          margin: 18mm 15mm 11mm 25mm;
+          margin: 15mm 15mm 8mm 25mm;
           @top-center {
             content: counter(page);
             font-size: 11pt;
@@ -55,7 +55,7 @@ export const printElement = (
         }`
       : `@page {
           size: A4 portrait;
-          margin: 18mm 15mm 11mm 20mm;
+          margin: 15mm 15mm 8mm 20mm;
           @top-center {
             content: counter(page);
             font-size: 11pt;

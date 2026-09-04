@@ -1426,27 +1426,8 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   }
 
   // ===================== CRUD MAU BENH (DISEASE TEMPLATES) =====================
-  public syncChanDoanMauBenh(): { success: boolean; count: number } {
-    if (!this.db) return { success: false, count: 0 };
-    try {
-      this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh;");
-      this.persistDatabase();
-      const res = this.query<{ count: number }>("SELECT COUNT(*) as count FROM mau_benh;");
-      const total = res.length > 0 ? Number(res[0].count) : 0;
-      return { success: true, count: total };
-    } catch (e) {
-      console.error("Lỗi khi chạy lệnh UPDATE mau_benh SET chan_doan_chuan = ten_benh:", e);
-      return { success: false, count: 0 };
-    }
-  }
-
   public getMauBenhList(): MauBenh[] {
     if (!this.db) return [];
-    try {
-      this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh WHERE chan_doan_chuan IS NULL OR chan_doan_chuan != ten_benh;");
-    } catch (e) {
-      console.warn("Auto-sync chan_doan_chuan in getMauBenhList note:", e);
-    }
     const list = this.query<MauBenh>("SELECT * FROM mau_benh ORDER BY id ASC");
     if (list.length === 0) return [];
 
