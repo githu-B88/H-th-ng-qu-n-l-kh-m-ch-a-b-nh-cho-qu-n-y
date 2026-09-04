@@ -437,7 +437,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               }),
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 1200, after: 0 }, // 60pt khoảng trống ký tay theo yêu cầu
+                spacing: { before: 1100, after: 0 }, // 55pt khoảng trống ký tay theo yêu cầu
                 children: [
                   new TextRun({
                     text: tenBacSiKy,
@@ -480,7 +480,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               }),
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 1200, after: 0 }, // 60pt khoảng trống ký tay theo yêu cầu
+                spacing: { before: 1100, after: 0 }, // 55pt khoảng trống ký tay theo yêu cầu
                 children: [
                   new TextRun({
                     text: tenNguoiBenhKy,
@@ -524,7 +524,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               }),
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 1200, after: 0 }, // 60pt khoảng trống ký tay theo yêu cầu
+                spacing: { before: 1100, after: 0 }, // 55pt khoảng trống ký tay theo yêu cầu
                 children: [
                   new TextRun({
                     text: tenBacSiKy,

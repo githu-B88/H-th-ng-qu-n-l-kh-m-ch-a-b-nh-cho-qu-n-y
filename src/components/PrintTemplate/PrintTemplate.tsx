@@ -350,7 +350,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
         <div style={{ width: '33.33%', textAlign: 'center' }}>
           <div style={{ visibility: 'hidden', marginBottom: '6px' }}>&nbsp;</div>
           <div style={{ fontWeight: 'bold' }}>NGƯỜI LẬP BẢNG KÊ</div>
-          <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
+          <div style={{ marginTop: '55pt', fontWeight: 'bold', fontSize: '12pt' }}>
             {record.ten_bac_si || ''}
           </div>
         </div>
@@ -359,7 +359,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
         <div style={{ width: '33.33%', textAlign: 'center' }}>
           <div style={{ visibility: 'hidden', marginBottom: '6px' }}>&nbsp;</div>
           <div style={{ fontWeight: 'bold' }}>XÁC NHẬN CỦA NGƯỜI BỆNH</div>
-          <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
+          <div style={{ marginTop: '55pt', fontWeight: 'bold', fontSize: '12pt' }}>
             {record.ten_nhan_su || ''}
           </div>
         </div>
@@ -370,7 +370,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
             Ngày {day} tháng {month} năm {year}
           </div>
           <div style={{ fontWeight: 'bold' }}>PHỤ TRÁCH QUÂN Y ĐƠN VỊ</div>
-          <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
+          <div style={{ marginTop: '55pt', fontWeight: 'bold', fontSize: '12pt' }}>
             {record.ten_bac_si || ''}
           </div>
         </div>
