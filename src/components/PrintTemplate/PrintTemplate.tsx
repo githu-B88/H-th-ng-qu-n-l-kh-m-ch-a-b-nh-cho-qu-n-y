@@ -90,7 +90,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
       <style>{`
         @page {
           size: A4 landscape;
-          margin: 1.3cm 1.5cm 0.5cm 2.5cm;
+          margin: 1.3cm 1.5cm 0.3cm 2.5cm;
           @top-center {
             content: counter(page);
             font-size: 11pt;
@@ -331,18 +331,18 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
       </div>
 
       {/* PHẦN 4: SỐ TIỀN BẰNG CHỮ (12pt) */}
-      <div className="mb-2 text-[12pt]">
+      <div className="text-[12pt] mb-0" style={{ marginBottom: '0px' }}>
         <span>Số tiền (viết bằng chữ): </span>
         <span className="font-bold italic">{tongTienBangChu}</span>
       </div>
 
-      {/* PHẦN 5: CHỮ KÝ (FOOTER) - 60pt KHOẢNG TRỐNG CHỮ KÝ - Giảm thêm 5 đơn vị theo yêu cầu */}
+      {/* PHẦN 5: CHỮ KÝ (FOOTER) - 60pt KHOẢNG TRỐNG CHỮ KÝ - Giảm khoảng cách còn 0 theo yêu cầu */}
       <div
         className="text-[12pt] leading-normal"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginTop: '1px',
+          marginTop: '0px',
           pageBreakInside: 'avoid'
         }}
       >
