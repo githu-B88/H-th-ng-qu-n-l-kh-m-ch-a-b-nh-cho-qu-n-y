@@ -554,7 +554,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
             },
             margin: {
               top: convertMillimetersToTwip(13), // 1.3cm theo yêu cầu
-              bottom: convertMillimetersToTwip(3), // 0.3cm theo yêu cầu
+              bottom: convertMillimetersToTwip(0), // 0cm theo yêu cầu
               left: convertMillimetersToTwip(25), // 2.5cm
               right: convertMillimetersToTwip(15), // 1.5cm
             },

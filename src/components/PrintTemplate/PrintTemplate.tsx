@@ -90,7 +90,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
       <style>{`
         @page {
           size: A4 landscape;
-          margin: 1.3cm 1.5cm 0.3cm 2.5cm;
+          margin: 1.3cm 1.5cm 0cm 2.5cm;
           @top-center {
             content: counter(page);
             font-size: 11pt;
