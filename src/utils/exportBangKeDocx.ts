@@ -553,7 +553,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
               height: convertMillimetersToTwip(210),
             },
             margin: {
-              top: convertMillimetersToTwip(15), // 1.5cm theo yêu cầu
+              top: convertMillimetersToTwip(13), // 1.3cm theo yêu cầu
               bottom: convertMillimetersToTwip(5), // 0.5cm theo yêu cầu
               left: convertMillimetersToTwip(25), // 2.5cm
               right: convertMillimetersToTwip(15), // 1.5cm
@@ -695,9 +695,9 @@ export async function exportBangKeToDocx(record: HoSoKham) {
           // Main Table (Borders fully visible)
           mainTable,
 
-          // Phần 4: Số tiền bằng chữ (12pt chuẩn) - Giảm thêm khoảng cách đến bảng chữ ký theo yêu cầu
+          // Phần 4: Số tiền bằng chữ (12pt chuẩn) - Giảm thêm 5 đơn vị khoảng cách đến bảng chữ ký theo yêu cầu
           new Paragraph({
-            spacing: { before: 10, after: 0, line: 160 },
+            spacing: { before: 0, after: 0, line: 120 },
             children: [
               new TextRun({ text: 'Số tiền (viết bằng chữ): ', font: FONT_FAMILY, size: 24 }),
               new TextRun({
