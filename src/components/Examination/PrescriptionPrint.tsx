@@ -434,24 +434,25 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
             </div>
 
             {/* Phần 4: Số tiền bằng chữ (12pt) */}
-            <div className="mb-2 text-[12pt]">
+            <div className="text-[12pt] mb-0" style={{ marginBottom: '0px', lineHeight: '1.2' }}>
               <span>Số tiền (viết bằng chữ): </span>
               <span className="font-bold italic">{tongTienBangChu}</span>
             </div>
 
-            {/* Phần 5: Chữ ký (Footer) - 60pt khoảng trống chữ ký */}
+            {/* Phần 5: Chữ ký (Footer) - 55pt khoảng trống chữ ký chuẩn, khoảng cách trên 5px */}
             <div
               className="text-[12pt] leading-normal"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                marginTop: '18px'
+                marginTop: '5px',
+                pageBreakInside: 'avoid'
               }}
             >
               <div style={{ width: '33.33%', textAlign: 'center' }}>
                 <div style={{ visibility: 'hidden', marginBottom: '4px' }}>&nbsp;</div>
                 <div style={{ fontWeight: 'bold' }}>NGƯỜI LẬP BẢNG KÊ</div>
-                <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
+                <div style={{ marginTop: '55pt', fontWeight: 'bold', fontSize: '12pt' }}>
                   {record.ten_bac_si || ''}
                 </div>
               </div>
@@ -459,7 +460,7 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
               <div style={{ width: '33.33%', textAlign: 'center' }}>
                 <div style={{ visibility: 'hidden', marginBottom: '4px' }}>&nbsp;</div>
                 <div style={{ fontWeight: 'bold' }}>XÁC NHẬN CỦA NGƯỜI BỆNH</div>
-                <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
+                <div style={{ marginTop: '55pt', fontWeight: 'bold', fontSize: '12pt' }}>
                   {record.ten_nhan_su || ''}
                 </div>
               </div>
@@ -469,7 +470,7 @@ export const PrescriptionPrint: React.FC<PrescriptionPrintProps> = ({
                   Ngày {day} tháng {month} năm {year}
                 </div>
                 <div style={{ fontWeight: 'bold' }}>PHỤ TRÁCH QUÂN Y ĐƠN VỊ</div>
-                <div style={{ marginTop: '60pt', fontWeight: 'bold', fontSize: '12pt' }}>
+                <div style={{ marginTop: '55pt', fontWeight: 'bold', fontSize: '12pt' }}>
                   {record.ten_bac_si || ''}
                 </div>
               </div>

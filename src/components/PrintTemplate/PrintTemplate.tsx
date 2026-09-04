@@ -331,18 +331,18 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
       </div>
 
       {/* PHẦN 4: SỐ TIỀN BẰNG CHỮ (12pt) */}
-      <div className="text-[12pt] mb-0" style={{ marginBottom: '0px' }}>
+      <div className="text-[12pt] mb-0" style={{ marginBottom: '0px', lineHeight: '1.2' }}>
         <span>Số tiền (viết bằng chữ): </span>
         <span className="font-bold italic">{tongTienBangChu}</span>
       </div>
 
-      {/* PHẦN 5: CHỮ KÝ (FOOTER) - 60pt KHOẢNG TRỐNG CHỮ KÝ - Giảm khoảng cách còn 0 theo yêu cầu */}
+      {/* PHẦN 5: CHỮ KÝ (FOOTER) - 55pt KHOẢNG TRỐNG CHỮ KÝ - Khoảng cách trên chính xác 5px */}
       <div
         className="text-[12pt] leading-normal"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginTop: '0px',
+          marginTop: '5px',
           pageBreakInside: 'avoid'
         }}
       >

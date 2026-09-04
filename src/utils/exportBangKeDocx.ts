@@ -695,9 +695,9 @@ export async function exportBangKeToDocx(record: HoSoKham) {
           // Main Table (Borders fully visible)
           mainTable,
 
-          // Phần 4: Số tiền bằng chữ (12pt chuẩn) - Giảm khoảng cách đến bảng chữ ký còn 0 theo yêu cầu
+          // Phần 4: Số tiền bằng chữ (12pt chuẩn) - Khoảng cách đến bảng chữ ký chính xác 5px (75 twips)
           new Paragraph({
-            spacing: { before: 0, after: 0, line: 100 },
+            spacing: { before: 0, after: 75, line: 200 },
             children: [
               new TextRun({ text: 'Số tiền (viết bằng chữ): ', font: FONT_FAMILY, size: 24 }),
               new TextRun({
