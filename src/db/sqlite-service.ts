@@ -266,10 +266,32 @@ class SqliteService {
         } else {
           console.warn('Failed to download DB from backend (Not OK), creating empty.');
           this.db = new SQL.Database();
+          this.createTables();
+          this.seedInitialData(false);
         }
       } catch (err) {
         console.warn('Backend /api/db-download failed, creating empty.', err);
         this.db = new SQL.Database();
+        this.createTables();
+        this.seedInitialData(false);
+      }
+
+      // Check if accounts exist, if empty seed initial data
+      try {
+        const userCheck = this.db.exec("SELECT COUNT(*) as count FROM nguoi_dung");
+        const userCount = userCheck.length > 0 && userCheck[0].values.length > 0 ? Number(userCheck[0].values[0][0]) : 0;
+        if (userCount === 0) {
+          console.log('nguoi_dung is empty, seeding initial data on client...');
+          this.seedInitialData(false);
+        }
+      } catch (checkErr) {
+        console.warn('Initial data verification note:', checkErr);
+        try {
+          this.createTables();
+          this.seedInitialData(false);
+        } catch (createErr) {
+          console.error('Failed to create tables or seed fallback:', createErr);
+        }
       }
 
       // Monkey patch this.db.run to auto-sync to backend

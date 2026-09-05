@@ -448,6 +448,15 @@ export const SEED_NGUOI_DUNG = [
     vai_tro: 'admin' as const,
     id_bac_si: 1,
     trang_thai: 1
+  },
+  {
+    id: 2,
+    ten_dang_nhap: 'admin',
+    mat_khau: 'Giang@9999',
+    ho_ten: 'Quản trị viên',
+    vai_tro: 'admin' as const,
+    id_bac_si: 1,
+    trang_thai: 1
   }
 ];
 

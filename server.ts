@@ -6,6 +6,14 @@ import Database from 'better-sqlite3';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { createServer as createViteServer } from 'vite';
+import {
+  SEED_DON_VI_CAP_1,
+  SEED_CO_QUAN,
+  SEED_BAC_SI,
+  SEED_NHAN_SU,
+  MORE_NHAN_SU,
+  SEED_NGUOI_DUNG
+} from './src/db/seed-data';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -271,31 +279,97 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   db.exec(schema);
 
   // SEED DEFAULT DATA
-  // Check and seed 'don_vi_cap_1'
+  // 1. Check and seed 'don_vi_cap_1'
   const countDv1 = db.prepare('SELECT COUNT(*) as count FROM don_vi_cap_1').get() as { count: number };
   if (countDv1.count === 0) {
     console.log("Seeding don_vi_cap_1...");
-    const insert = db.prepare('INSERT INTO don_vi_cap_1 (id, ten) VALUES (?, ?)');
-    insert.run(1, 'Lữ đoàn 127');
-    insert.run(2, 'Lữ đoàn 175');
-    insert.run(3, 'Trung đoàn 551');
+    const insert = db.prepare('INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) VALUES (?, ?, ?)');
+    for (const cap1 of SEED_DON_VI_CAP_1) {
+      insert.run(cap1.id, cap1.ten, cap1.ghi_chu || '');
+    }
   }
 
-  // Check and seed 'don_vi_cap_2'
+  // 2. Check and seed 'don_vi_cap_2'
   const countDv2 = db.prepare('SELECT COUNT(*) as count FROM don_vi_cap_2').get() as { count: number };
   if (countDv2.count === 0) {
     console.log("Seeding don_vi_cap_2...");
-    const insert = db.prepare('INSERT INTO don_vi_cap_2 (id_don_vi_cap_1, ten) VALUES (?, ?)');
-    insert.run(1, 'Hải đội 511');
-    insert.run(1, 'Hải đội 512');
+    const insert = db.prepare('INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?, ?)');
+    for (const cq of SEED_CO_QUAN) {
+      insert.run(cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '');
+    }
   }
 
-  // Check and seed 'bac_si'
+  // 3. Check and seed 'bac_si'
   const countBs = db.prepare('SELECT COUNT(*) as count FROM bac_si').get() as { count: number };
   if (countBs.count === 0) {
     console.log("Seeding bac_si...");
-    const insert = db.prepare("INSERT INTO bac_si (ho_ten, gioi_tinh, id_don_vi, chuyen_mon) VALUES (?, ?, ?, ?)");
-    insert.run("Nguyễn Văn A", "Nam", 1, "Bác sĩ trưởng");
+    const insert = db.prepare('INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const bs of SEED_BAC_SI) {
+      insert.run(bs.id, bs.ho_ten, bs.the_bhyt || null, bs.ngay_sinh || null, bs.gioi_tinh || 'Nam', bs.id_don_vi || null, bs.chuyen_mon || null, bs.ghi_chu || null);
+    }
+  }
+
+  // 4. Check and seed 'can_bo' and 'the_bhyt'
+  const countCb = db.prepare('SELECT COUNT(*) as count FROM can_bo').get() as { count: number };
+  if (countCb.count === 0) {
+    console.log("Seeding can_bo and the_bhyt...");
+    const insertThe = db.prepare('INSERT OR IGNORE INTO the_bhyt (ma_the_bhyt, tu_ngay, den_ngay) VALUES (?, ?, ?)');
+    const insertCb = db.prepare('INSERT OR IGNORE INTO can_bo (id, ho_ten, ngay_sinh, gioi_tinh, id_don_vi_cap_2, ma_the_bhyt, cap_bac, chuc_vu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const ns of [...SEED_NHAN_SU, ...MORE_NHAN_SU]) {
+      if (ns.ma_the_bhyt) {
+        insertThe.run(ns.ma_the_bhyt, '2023-01-01', '2025-12-31');
+      }
+      insertCb.run(ns.id, ns.ho_ten, ns.ngay_sinh || null, ns.gioi_tinh || 'Nam', ns.id_don_vi_cap_2 || null, ns.ma_the_bhyt || null, ns.cap_bac || null, ns.chuc_vu || null);
+    }
+  }
+
+  // 5. Check and seed 'nguoi_dung' (Login accounts)
+  const countNd = db.prepare('SELECT COUNT(*) as count FROM nguoi_dung').get() as { count: number };
+  if (countNd.count === 0) {
+    console.log("Seeding nguoi_dung (accounts)...");
+    const insertNd = db.prepare('INSERT OR IGNORE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    for (const u of SEED_NGUOI_DUNG) {
+      insertNd.run(u.id, u.ten_dang_nhap, u.mat_khau, u.ho_ten, u.vai_tro || 'admin', u.id_bac_si || null, u.trang_thai ?? 1);
+    }
+    // Also ensure admin alias exists
+    insertNd.run(2, 'admin', 'Giang@9999', 'Quản trị viên', 'admin', 1, 1);
+  }
+
+  // 6. Check and seed Catalog items (thuoc, vat_tu, dich_vu_kt)
+  try {
+    const defaultDataPath = path.join(process.cwd(), 'src/db/defaultData.json');
+    if (fs.existsSync(defaultDataPath)) {
+      const defaultData = JSON.parse(fs.readFileSync(defaultDataPath, 'utf8'));
+
+      const countThuoc = db.prepare('SELECT COUNT(*) as count FROM thuoc').get() as { count: number };
+      if (countThuoc.count === 0 && defaultData.thuoc) {
+        console.log("Seeding thuoc...");
+        const insertThuoc = db.prepare('INSERT OR IGNORE INTO thuoc (ten, don_vi_tinh, don_gia, ghi_chu, ton_kho, ham_luong, cach_dung_mac_dinh) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        for (const t of defaultData.thuoc) {
+          insertThuoc.run(t.ten, t.dvt, t.gia, t.ghi_chu || '', t.ton_kho, t.ham_luong || '', t.cach_dung || '');
+        }
+      }
+
+      const countVt = db.prepare('SELECT COUNT(*) as count FROM vat_tu').get() as { count: number };
+      if (countVt.count === 0 && defaultData.vat_tu) {
+        console.log("Seeding vat_tu...");
+        const insertVt = db.prepare('INSERT OR IGNORE INTO vat_tu (ten, don_vi_tinh, don_gia, ghi_chu, ton_kho) VALUES (?, ?, ?, ?, ?)');
+        for (const vt of defaultData.vat_tu) {
+          insertVt.run(vt.ten, vt.dvt, vt.gia, vt.ghi_chu || '', vt.ton_kho);
+        }
+      }
+
+      const countDv = db.prepare('SELECT COUNT(*) as count FROM dich_vu_kt').get() as { count: number };
+      if (countDv.count === 0 && defaultData.dich_vu) {
+        console.log("Seeding dich_vu_kt...");
+        const insertDv = db.prepare('INSERT OR IGNORE INTO dich_vu_kt (ten, don_vi_tinh, don_gia, ghi_chu) VALUES (?, ?, ?, ?)');
+        for (const dv of defaultData.dich_vu) {
+          insertDv.run(dv.ten, dv.dvt, dv.gia, dv.ghi_chu || '');
+        }
+      }
+    }
+  } catch (seedErr) {
+    console.warn("Seeding catalog note:", seedErr);
   }
 };
 
