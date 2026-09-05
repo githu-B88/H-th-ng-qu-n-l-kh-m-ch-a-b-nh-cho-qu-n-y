@@ -98,33 +98,9 @@ class SqliteService {
 
   // Save database binary to IndexedDB with queueing / mutex without blocking localStorage conversion
   public async persistDatabase(): Promise<void> {
-    if (!this.db) return;
-
-    if (this.isSaving) {
-      this.saveQueued = true;
-      return new Promise<void>((resolve) => {
-        this.saveResolveQueue.push(resolve);
-      });
-    }
-
-    this.isSaving = true;
-    try {
-      const data = this.db.export();
-      await this.saveToIndexedDB(data);
-      this.notify();
-    } catch (err) {
-      console.error('Failed to persist SQLite database:', err);
-    } finally {
-      this.isSaving = false;
-      const resolvers = [...this.saveResolveQueue];
-      this.saveResolveQueue = [];
-      resolvers.forEach((r) => r());
-
-      if (this.saveQueued) {
-        this.saveQueued = false;
-        await this.persistDatabase();
-      }
-    }
+    // No longer persisting to IndexedDB locally.
+    // Writes are synced directly to backend via monkey-patched db.run()
+    return;
   }
 
   private async openIndexedDB(): Promise<IDBDatabase> {
@@ -277,63 +253,42 @@ class SqliteService {
 
   public async init(): Promise<void> {
     if (this.isInitialized && this.db) return;
-
     try {
       const SQL = await this.getSqlJs();
-
-      const savedData = await this.loadFromIndexedDB();
-      if (savedData && savedData.length > 0) {
-        try {
-          this.db = new SQL.Database(savedData);
-          this.db.run("PRAGMA foreign_keys = OFF;");
-          this.createTables();
-
-          // Migration & Setup: ensure don_vi_cap_1 (6 fixed units) and don_vi_cap_2 (39 subunits) exist
-          this.ensureDefaultDonVi();
-
-          // Ensure nguoi_dung has only the single admin account ban_quan_y
-          this.db.run("DELETE FROM nguoi_dung WHERE ten_dang_nhap != 'ban_quan_y';");
-          this.db.run(
-            `INSERT OR REPLACE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai)
-             VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', NULL, 1)`
-          );
-
-          // Normalize any orphaned foreign keys safely to NULL (prevent FK fail)
-          this.db.run("UPDATE can_bo SET id_don_vi_cap_2 = NULL WHERE id_don_vi_cap_2 IS NOT NULL AND id_don_vi_cap_2 NOT IN (SELECT id FROM don_vi_cap_2);");
-          this.db.run("UPDATE bac_si SET id_don_vi = NULL WHERE id_don_vi IS NOT NULL AND id_don_vi NOT IN (SELECT id FROM don_vi_cap_2);");
-          this.db.run("UPDATE can_bo SET ma_the_bhyt = NULL WHERE ma_the_bhyt IS NOT NULL AND ma_the_bhyt NOT IN (SELECT ma_the_bhyt FROM the_bhyt);");
-          this.db.run("UPDATE ho_so_kham SET id_mau_benh = NULL WHERE id_mau_benh IS NOT NULL AND id_mau_benh NOT IN (SELECT id FROM mau_benh);");
-          this.db.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si IS NOT NULL AND id_bac_si NOT IN (SELECT id FROM bac_si);");
-          // Đồng bộ triệt để chan_doan_chuan = ten_benh cho tất cả bản ghi mẫu bệnh cũ hiện có
-          this.db.run("UPDATE mau_benh SET chan_doan_chuan = ten_benh;");
-
-          this.db.run("PRAGMA foreign_keys = ON;");
-        } catch (e) {
-          console.warn('Error reading saved database, initializing fresh tables with default units', e);
+      
+      console.log('Downloading master SQLite DB from backend...');
+      try {
+        const response = await fetch('/api/db-download?_t=' + Date.now());
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          this.db = new SQL.Database(new Uint8Array(arrayBuffer));
+          console.log('Downloaded and initialized SQLite from backend successfully.');
+        } else {
+          console.warn('Failed to download DB from backend (Not OK), creating empty.');
           this.db = new SQL.Database();
-          this.db.run("PRAGMA foreign_keys = OFF;");
-          this.createTables();
-          this.ensureDefaultDonVi();
-          this.db.run(
-            `INSERT OR IGNORE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai)
-             VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', NULL, 1)`
-          );
-          this.db.run("PRAGMA foreign_keys = ON;");
         }
-      } else {
+      } catch (err) {
+        console.warn('Backend /api/db-download failed, creating empty.', err);
         this.db = new SQL.Database();
-        this.db.run("PRAGMA foreign_keys = OFF;");
-        this.createTables();
-        this.ensureDefaultDonVi();
-        this.db.run(
-          `INSERT OR IGNORE INTO nguoi_dung (id, ten_dang_nhap, mat_khau, ho_ten, vai_tro, id_bac_si, trang_thai)
-           VALUES (1, 'ban_quan_y', 'Giang@9999', 'Ban Quân Y', 'admin', NULL, 1)`
-        );
-        this.db.run("PRAGMA foreign_keys = ON;");
       }
 
+      // Monkey patch this.db.run to auto-sync to backend
+      const originalRun = this.db.run.bind(this.db);
+      this.db.run = (sql: string, params?: any[]) => {
+          const result = originalRun(sql, params);
+          // Sync to backend (fire and forget)
+          if (!sql.toUpperCase().includes('PRAGMA ')) {
+             fetch('/api/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sql, params: params || [] })
+             }).catch(e => console.error("Sync error:", e));
+          }
+          return result;
+      };
+
       this.isInitialized = true;
-      await this.persistDatabase();
+      this.notify();
     } catch (error) {
       console.error('Failed to initialize SQLite with sql.js:', error);
       throw error;
@@ -789,11 +744,17 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   public run(sql: string, params: SqlValue[] = []): { success: boolean; lastInsertRowId?: number; changes?: number } {
     if (!this.db) return { success: false };
     try {
-      this.db.run(sql, params);
-      const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id, changes() as ch");
-      const lastInsertRowId = lastIdRes[0]?.values[0]?.[0] as number | undefined;
-      const changes = lastIdRes[0]?.values[0]?.[1] as number | undefined;
-      this.persistDatabase();
+      this.db.run(sql, params); // This will trigger the auto-sync via monkey patch
+      
+      let lastInsertRowId = undefined;
+      let changes = undefined;
+      try {
+        const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id, changes() as ch");
+        lastInsertRowId = lastIdRes[0]?.values[0]?.[0] as number | undefined;
+        changes = lastIdRes[0]?.values[0]?.[1] as number | undefined;
+      } catch (e) {}
+
+      this.notify();
       return { success: true, lastInsertRowId, changes };
     } catch (err) {
       console.error('SQL run error:', sql, err);
