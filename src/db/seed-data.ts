@@ -69,9 +69,9 @@ export const SEED_BAC_SI: BacSi[] = [
     the_bhyt: 'DN4010123456789',
     ngay_sinh: '1982-05-14',
     gioi_tinh: 'Nam',
-    id_don_vi: 15,
+    id_don_vi: 1,
     chuyen_mon: 'Bác sĩ Đa khoa - Chuyên khoa Nội',
-    ghi_chu: 'Bệnh xá Vùng 5 Hải quân, kinh nghiệm 18 năm'
+    ghi_chu: 'Quân y phụ trách Phòng Tham mưu Vùng (Được khám cho cả 3 phòng: Tham mưu, Chính trị, Hậu cần-Kỹ thuật)'
   },
   {
     id: 2,
@@ -81,7 +81,7 @@ export const SEED_BAC_SI: BacSi[] = [
     gioi_tinh: 'Nữ',
     id_don_vi: 15,
     chuyen_mon: 'Bác sĩ Nội Tim Mạch & Hô Hấp',
-    ghi_chu: 'Phụ trách chuyên môn khám và cấp phát thuốc BHYT'
+    ghi_chu: 'Phụ trách chuyên môn khám và cấp phát thuốc BHYT Bệnh xá Vùng 5 (Phòng Hậu cần-Kỹ thuật)'
   },
   {
     id: 3,
@@ -91,7 +91,27 @@ export const SEED_BAC_SI: BacSi[] = [
     gioi_tinh: 'Nam',
     id_don_vi: 15,
     chuyen_mon: 'Y học cổ truyền & Phục hồi chức năng',
-    ghi_chu: 'Phụ trách xoa bóp, châm cứu, vật lý trị liệu Bệnh xá Vùng'
+    ghi_chu: 'Phụ trách xoa bóp, châm cứu, vật lý trị liệu Bệnh xá Vùng (Phòng Hậu cần-Kỹ thuật)'
+  },
+  {
+    id: 4,
+    ho_ten: 'BS. Lê Thị Mai',
+    the_bhyt: 'DN4010178945612',
+    ngay_sinh: '1990-07-22',
+    gioi_tinh: 'Nữ',
+    id_don_vi: 8,
+    chuyen_mon: 'Bác sĩ Đa khoa - Chẩn đoán hình ảnh',
+    ghi_chu: 'Bác sĩ phụ trách Phòng Chính trị Vùng (Chỉ khám cho quân nhân Phòng Chính trị Vùng)'
+  },
+  {
+    id: 5,
+    ho_ten: 'Y sĩ Quân y Trần Văn Bình',
+    the_bhyt: 'DN4010134567890',
+    ngay_sinh: '1995-04-16',
+    gioi_tinh: 'Nam',
+    id_don_vi: 27,
+    chuyen_mon: 'Y sĩ Đa khoa - Ngoại cấp cứu',
+    ghi_chu: 'Quân y Tiểu đoàn 553 (Chỉ khám cho quân nhân Tiểu đoàn 553)'
   }
 ];
 

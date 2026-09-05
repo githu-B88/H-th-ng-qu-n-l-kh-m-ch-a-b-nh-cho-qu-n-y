@@ -309,6 +309,26 @@ class SqliteService {
           return result;
       };
 
+      // MIGRATION: Bổ sung cột id_don_vi_cap_1 cho bac_si và can_bo nếu chưa có
+      try {
+        originalRun("ALTER TABLE bac_si ADD COLUMN id_don_vi_cap_1 INTEGER;");
+      } catch {}
+      try {
+        originalRun("ALTER TABLE can_bo ADD COLUMN id_don_vi_cap_1 INTEGER;");
+      } catch {}
+      try {
+        originalRun(`
+          UPDATE bac_si 
+          SET id_don_vi_cap_1 = (SELECT id_don_vi_cap_1 FROM don_vi_cap_2 WHERE don_vi_cap_2.id = bac_si.id_don_vi)
+          WHERE id_don_vi_cap_1 IS NULL AND id_don_vi IS NOT NULL;
+        `);
+        originalRun(`
+          UPDATE can_bo 
+          SET id_don_vi_cap_1 = (SELECT id_don_vi_cap_1 FROM don_vi_cap_2 WHERE don_vi_cap_2.id = can_bo.id_don_vi_cap_2)
+          WHERE id_don_vi_cap_1 IS NULL AND id_don_vi_cap_2 IS NOT NULL;
+        `);
+      } catch {}
+
       this.isInitialized = true;
       this.notify();
     } catch (error) {
@@ -349,9 +369,11 @@ CREATE TABLE IF NOT EXISTS bac_si (
     the_bhyt TEXT,
     ngay_sinh TEXT,
     gioi_tinh TEXT DEFAULT 'Nam' CHECK(gioi_tinh IN ('Nam', 'Nữ', 'Khác')),
+    id_don_vi_cap_1 INTEGER,
     id_don_vi INTEGER,
     chuyen_mon TEXT,
     ghi_chu TEXT,
+    FOREIGN KEY (id_don_vi_cap_1) REFERENCES don_vi_cap_1(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (id_don_vi) REFERENCES don_vi_cap_2(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
@@ -368,11 +390,13 @@ CREATE TABLE IF NOT EXISTS can_bo (
     ho_ten TEXT NOT NULL,
     ngay_sinh TEXT,
     gioi_tinh TEXT DEFAULT 'Nam' CHECK(gioi_tinh IN ('Nam', 'Nữ', 'Khác')),
+    id_don_vi_cap_1 INTEGER,
     id_don_vi_cap_2 INTEGER,
     ma_the_bhyt TEXT,
     cap_bac TEXT,
     chuc_vu TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_don_vi_cap_1) REFERENCES don_vi_cap_1(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (id_don_vi_cap_2) REFERENCES don_vi_cap_2(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (ma_the_bhyt) REFERENCES the_bhyt(ma_the_bhyt) ON UPDATE CASCADE ON DELETE SET NULL
 );
@@ -788,6 +812,23 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   public ensureDefaultDonVi(): void {
     if (!this.db) return;
     try {
+      // 1. Xóa các đơn vị cũ không còn sử dụng: Lữ đoàn 127, 175, Trung đoàn 551 và các đơn vị cấp 2 tương ứng
+      this.db.run(`
+        DELETE FROM don_vi_cap_2 
+        WHERE LOWER(ten) LIKE '%hải đội%' 
+           OR LOWER(ten) LIKE '%hai doi%' 
+           OR LOWER(ten) LIKE '%127%' 
+           OR LOWER(ten) LIKE '%175%' 
+           OR LOWER(ten) LIKE '%551%';
+      `);
+      this.db.run(`
+        DELETE FROM don_vi_cap_1 
+        WHERE LOWER(ten) LIKE '%127%' 
+           OR LOWER(ten) LIKE '%175%' 
+           OR LOWER(ten) LIKE '%551%';
+      `);
+
+      // 2. Chèn / cập nhật chính xác 6 Đơn vị cấp 1
       for (const cap1 of SEED_DON_VI_CAP_1) {
         this.db.run(
           "INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) VALUES (?, ?, ?)",
@@ -798,6 +839,8 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
           [cap1.ten, cap1.ghi_chu || '', cap1.id]
         );
       }
+
+      // 3. Chèn / cập nhật các đơn vị cấp 2 trực thuộc
       for (const cq of SEED_CO_QUAN) {
         this.db.run(
           "INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?, ?)",
@@ -806,6 +849,16 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         this.db.run(
           "UPDATE don_vi_cap_2 SET id_don_vi_cap_1 = ?, ten = ?, ghi_chu = ? WHERE id = ?",
           [cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '', cq.id]
+        );
+      }
+
+      // 4. Đồng bộ lại Bác sĩ: BS 1 thuộc Phòng Tham mưu (Ban Tác chiến id 1)
+      this.db.run("UPDATE bac_si SET id_don_vi = 1 WHERE id = 1 AND (id_don_vi IS NULL OR id_don_vi = 15);");
+      // Bổ sung BS 4 và 5 nếu chưa có
+      for (const bs of SEED_BAC_SI) {
+        this.db.run(
+          "INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          [bs.id, bs.ho_ten, bs.the_bhyt || null, bs.ngay_sinh || null, bs.gioi_tinh || 'Nam', bs.id_don_vi || null, bs.chuyen_mon || null, bs.ghi_chu || null]
         );
       }
     } catch (err) {
@@ -819,7 +872,8 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
   public getDonViCap1List(): any[] {
     let list = this.query<any>("SELECT * FROM don_vi_cap_1 ORDER BY id ASC");
-    if (list.length === 0) {
+    const checkObsolete = this.query<any>("SELECT id FROM don_vi_cap_1 WHERE LOWER(ten) LIKE '%127%' OR LOWER(ten) LIKE '%175%' OR LOWER(ten) LIKE '%551%'");
+    if (list.length === 0 || checkObsolete.length > 0) {
       this.ensureDefaultDonVi();
       list = this.query<any>("SELECT * FROM don_vi_cap_1 ORDER BY id ASC");
     }
@@ -828,11 +882,45 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
   public getDonViCap2List(): any[] {
     let list = this.query<any>("SELECT * FROM don_vi_cap_2 ORDER BY id ASC");
-    if (list.length === 0) {
+    const checkObsolete = this.query<any>("SELECT id FROM don_vi_cap_2 WHERE LOWER(ten) LIKE '%hải đội%' OR LOWER(ten) LIKE '%hai doi%' OR LOWER(ten) LIKE '%127%' OR LOWER(ten) LIKE '%175%' OR LOWER(ten) LIKE '%551%'");
+    if (list.length === 0 || checkObsolete.length > 0) {
       this.ensureDefaultDonVi();
       list = this.query<any>("SELECT * FROM don_vi_cap_2 ORDER BY id ASC");
     }
     return list;
+  }
+
+  public saveDonViCap1(d1: any): boolean {
+    const ten = d1.ten || '';
+    let res;
+    if (d1.id) {
+      res = this.run("UPDATE don_vi_cap_1 SET ten = ?, ghi_chu = ? WHERE id = ?", [
+        ten,
+        d1.ghi_chu || '',
+        d1.id
+      ]);
+    } else {
+      res = this.run("INSERT INTO don_vi_cap_1 (ten, ghi_chu) VALUES (?, ?)", [
+        ten,
+        d1.ghi_chu || ''
+      ]);
+    }
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
+  }
+
+  public deleteDonViCap1(id: number): boolean {
+    // Delete sub units first
+    this.run("DELETE FROM don_vi_cap_2 WHERE id_don_vi_cap_1 = ?", [id]);
+    const res = this.run("DELETE FROM don_vi_cap_1 WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   public getTheBHYT(ma_the: string): any {
@@ -840,45 +928,66 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     return res.length > 0 ? res[0] : null;
   }
 
-
   public saveCoQuan(cq: any): boolean {
     const ten = cq.ten_co_quan || cq.ten || '';
+    let res;
     if (cq.id) {
-      return this.run("UPDATE don_vi_cap_2 SET ten = ?, ghi_chu = ? WHERE id = ?", [
+      res = this.run("UPDATE don_vi_cap_2 SET id_don_vi_cap_1 = ?, ten = ?, ghi_chu = ? WHERE id = ?", [
+        cq.id_don_vi_cap_1 || 1,
         ten,
         cq.ghi_chu || '',
         cq.id
-      ]).success;
+      ]);
     } else {
-      return this.run("INSERT OR IGNORE INTO don_vi_cap_2 (id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?)", [
-        cq.id_don_vi_cap_1 || 1, // Defaulting to 1 for backward compatibility
+      res = this.run("INSERT INTO don_vi_cap_2 (id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?)", [
+        cq.id_don_vi_cap_1 || 1,
         ten,
         cq.ghi_chu || ''
-      ]).success;
+      ]);
     }
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   public deleteCoQuan(id: number): boolean {
-    return this.run("DELETE FROM don_vi_cap_2 WHERE id = ?", [id]).success;
+    const res = this.run("DELETE FROM don_vi_cap_2 WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   // ===================== CRUD BAC SI =====================
   public getBacSiList(): BacSi[] {
     return this.query<BacSi>(`
-      SELECT bs.*, d2.ten as ten_don_vi, d2.id_don_vi_cap_1, d1.id as id_don_vi_cap_1, d1.ten as ten_don_vi_cap_1 
+      SELECT 
+        bs.*, 
+        d2.ten as ten_don_vi, 
+        COALESCE(bs.id_don_vi_cap_1, d2.id_don_vi_cap_1) as id_don_vi_cap_1, 
+        COALESCE(d1_direct.ten, d1_sub.ten) as ten_don_vi_cap_1 
       FROM bac_si bs 
       LEFT JOIN don_vi_cap_2 d2 ON bs.id_don_vi = d2.id 
-      LEFT JOIN don_vi_cap_1 d1 ON d2.id_don_vi_cap_1 = d1.id
+      LEFT JOIN don_vi_cap_1 d1_sub ON d2.id_don_vi_cap_1 = d1_sub.id
+      LEFT JOIN don_vi_cap_1 d1_direct ON bs.id_don_vi_cap_1 = d1_direct.id
       ORDER BY bs.id ASC
     `);
   }
 
   public getBacSiById(id: number): BacSi | null {
     const list = this.query<BacSi>(`
-      SELECT bs.*, d2.ten as ten_don_vi, d2.id_don_vi_cap_1, d1.id as id_don_vi_cap_1, d1.ten as ten_don_vi_cap_1 
+      SELECT 
+        bs.*, 
+        d2.ten as ten_don_vi, 
+        COALESCE(bs.id_don_vi_cap_1, d2.id_don_vi_cap_1) as id_don_vi_cap_1, 
+        COALESCE(d1_direct.ten, d1_sub.ten) as ten_don_vi_cap_1 
       FROM bac_si bs 
       LEFT JOIN don_vi_cap_2 d2 ON bs.id_don_vi = d2.id 
-      LEFT JOIN don_vi_cap_1 d1 ON d2.id_don_vi_cap_1 = d1.id
+      LEFT JOIN don_vi_cap_1 d1_sub ON d2.id_don_vi_cap_1 = d1_sub.id
+      LEFT JOIN don_vi_cap_1 d1_direct ON bs.id_don_vi_cap_1 = d1_direct.id
       WHERE bs.id = ?
     `, [id]);
     return list.length > 0 ? list[0] : null;
@@ -890,43 +999,58 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     if (!hoTen) return { success: false, error: 'Họ tên bác sĩ không được để trống' };
 
     try {
+      let cap1Id = (bs as any).id_don_vi_cap_1 ? Number((bs as any).id_don_vi_cap_1) : null;
+      let cap2Id = bs.id_don_vi ? Number(bs.id_don_vi) : null;
+      if (cap2Id && !cap1Id) {
+        const sub = this.query<{ id_don_vi_cap_1: number }>("SELECT id_don_vi_cap_1 FROM don_vi_cap_2 WHERE id = ?", [cap2Id]);
+        if (sub.length > 0) cap1Id = sub[0].id_don_vi_cap_1;
+      }
+      if (cap1Id && cap2Id) {
+        const checkMatch = this.query<{ id: number }>("SELECT id FROM don_vi_cap_2 WHERE id = ? AND id_don_vi_cap_1 = ?", [cap2Id, cap1Id]);
+        if (checkMatch.length === 0) {
+          cap2Id = null;
+        }
+      }
+
       if (bs.id) {
-        this.db.run(
+        const res = this.run(
           `UPDATE bac_si SET
              ho_ten = ?, the_bhyt = ?, ngay_sinh = ?, gioi_tinh = ?,
-             id_don_vi = ?, chuyen_mon = ?, ghi_chu = ?
+             id_don_vi_cap_1 = ?, id_don_vi = ?, chuyen_mon = ?, ghi_chu = ?
            WHERE id = ?`,
           [
             hoTen,
             (bs.the_bhyt || '').trim(),
             bs.ngay_sinh || '',
             bs.gioi_tinh || 'Nam',
-            bs.id_don_vi ? Number(bs.id_don_vi) : null,
+            cap1Id,
+            cap2Id,
             (bs.chuyen_mon || '').trim(),
             (bs.ghi_chu || '').trim(),
             Number(bs.id)
           ]
         );
         this.persistDatabase();
-        return { success: true, id: Number(bs.id) };
+        this.notify();
+        return { success: res.success, id: Number(bs.id) };
       } else {
-        this.db.run(
-          `INSERT INTO bac_si (ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        const res = this.run(
+          `INSERT INTO bac_si (ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi_cap_1, id_don_vi, chuyen_mon, ghi_chu)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             hoTen,
             (bs.the_bhyt || '').trim(),
             bs.ngay_sinh || '',
             bs.gioi_tinh || 'Nam',
-            bs.id_don_vi ? Number(bs.id_don_vi) : null,
+            cap1Id,
+            cap2Id,
             (bs.chuyen_mon || '').trim(),
             (bs.ghi_chu || '').trim()
           ]
         );
-        const lastIdRes = this.db.exec("SELECT last_insert_rowid() as id");
-        const newId = Number(lastIdRes[0]?.values[0]?.[0]);
         this.persistDatabase();
-        return { success: true, id: newId };
+        this.notify();
+        return { success: res.success, id: res.lastInsertRowId };
       }
     } catch (err: any) {
       console.error('saveBacSi error:', err);
@@ -945,13 +1069,14 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
       // Safe deletion with Foreign Key handling
       this.db.run("PRAGMA foreign_keys = OFF;");
-      this.db.run("UPDATE ho_so_kham SET id_bac_si = ? WHERE id_bac_si = ?", [fallbackDocId, id]);
-      this.db.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si = ?", [id]);
-      this.db.run("DELETE FROM bac_si WHERE id = ?", [id]);
+      this.run("UPDATE ho_so_kham SET id_bac_si = ? WHERE id_bac_si = ?", [fallbackDocId, id]);
+      this.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si = ?", [id]);
+      const res = this.run("DELETE FROM bac_si WHERE id = ?", [id]);
       this.db.run("PRAGMA foreign_keys = ON;");
 
       this.persistDatabase();
-      return { success: true };
+      this.notify();
+      return { success: res.success };
     } catch (err: any) {
       console.error('deleteBacSi error:', err);
       return { success: false, error: err.message || 'Lỗi khi xóa Bác sĩ' };
@@ -969,29 +1094,30 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         ns.*, 
         d2.ten as ten_don_vi, 
         d2.ten as ten_don_vi_cap_2, 
-        d1.id as id_don_vi_cap_1, 
-        d1.ten as ten_don_vi_cap_1 
+        COALESCE(ns.id_don_vi_cap_1, d2.id_don_vi_cap_1) as id_don_vi_cap_1, 
+        COALESCE(d1_direct.ten, d1_sub.ten) as ten_don_vi_cap_1 
       FROM can_bo ns 
       LEFT JOIN don_vi_cap_2 d2 ON ns.id_don_vi_cap_2 = d2.id 
-      LEFT JOIN don_vi_cap_1 d1 ON d2.id_don_vi_cap_1 = d1.id
+      LEFT JOIN don_vi_cap_1 d1_sub ON d2.id_don_vi_cap_1 = d1_sub.id
+      LEFT JOIN don_vi_cap_1 d1_direct ON ns.id_don_vi_cap_1 = d1_direct.id
       WHERE 1=1
     `;
     const params: SqlValue[] = [];
 
     if (Array.isArray(idDonViCap1) && idDonViCap1.length > 0) {
       const placeholders = idDonViCap1.map(() => '?').join(', ');
-      sql += ` AND (d1.id IN (${placeholders}) OR d2.id_don_vi_cap_1 IN (${placeholders}))`;
-      params.push(...idDonViCap1.map(Number), ...idDonViCap1.map(Number));
+      sql += ` AND (ns.id_don_vi_cap_1 IN (${placeholders}) OR d1_sub.id IN (${placeholders}) OR d2.id_don_vi_cap_1 IN (${placeholders}))`;
+      params.push(...idDonViCap1.map(Number), ...idDonViCap1.map(Number), ...idDonViCap1.map(Number));
     } else if (idDonViCap1 && typeof idDonViCap1 === 'number') {
-      sql += ` AND (d1.id = ? OR d2.id_don_vi_cap_1 = ?)`;
-      params.push(Number(idDonViCap1), Number(idDonViCap1));
+      sql += ` AND (ns.id_don_vi_cap_1 = ? OR d1_sub.id = ? OR d2.id_don_vi_cap_1 = ?)`;
+      params.push(Number(idDonViCap1), Number(idDonViCap1), Number(idDonViCap1));
     } else if (Array.isArray(tenDonViCap1) && tenDonViCap1.length > 0) {
       const orClauses = tenDonViCap1
         .map(
           () => `(
-        LOWER(TRIM(d1.ten)) = LOWER(TRIM(?))
-        OR LOWER(TRIM(REPLACE(d1.ten, ' Vùng', ''))) = LOWER(TRIM(REPLACE(?, ' Vùng', '')))
-        OR LOWER(TRIM(d1.ten)) LIKE LOWER(TRIM(?))
+        LOWER(TRIM(COALESCE(d1_direct.ten, d1_sub.ten, ''))) = LOWER(TRIM(?))
+        OR LOWER(TRIM(REPLACE(COALESCE(d1_direct.ten, d1_sub.ten, ''), ' Vùng', ''))) = LOWER(TRIM(REPLACE(?, ' Vùng', '')))
+        OR LOWER(TRIM(COALESCE(d1_direct.ten, d1_sub.ten, ''))) LIKE LOWER(TRIM(?))
       )`
         )
         .join(' OR ');
@@ -1002,9 +1128,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       });
     } else if (tenDonViCap1 && typeof tenDonViCap1 === 'string' && tenDonViCap1.trim()) {
       sql += ` AND (
-        LOWER(TRIM(d1.ten)) = LOWER(TRIM(?))
-        OR LOWER(TRIM(REPLACE(d1.ten, ' Vùng', ''))) = LOWER(TRIM(REPLACE(?, ' Vùng', '')))
-        OR LOWER(TRIM(d1.ten)) LIKE LOWER(TRIM(?))
+        LOWER(TRIM(COALESCE(d1_direct.ten, d1_sub.ten, ''))) = LOWER(TRIM(?))
+        OR LOWER(TRIM(REPLACE(COALESCE(d1_direct.ten, d1_sub.ten, ''), ' Vùng', ''))) = LOWER(TRIM(REPLACE(?, ' Vùng', '')))
+        OR LOWER(TRIM(COALESCE(d1_direct.ten, d1_sub.ten, ''))) LIKE LOWER(TRIM(?))
       )`;
       const cleanName = `%${tenDonViCap1.trim().replace(/\s+Vùng$/i, '')}%`;
       params.push(tenDonViCap1.trim(), tenDonViCap1.trim(), cleanName);
@@ -1016,7 +1142,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         LOWER(ns.ho_ten) LIKE ? 
         OR LOWER(COALESCE(ns.ma_the_bhyt, '')) LIKE ? 
         OR LOWER(COALESCE(d2.ten, '')) LIKE ? 
-        OR LOWER(COALESCE(d1.ten, '')) LIKE ?
+        OR LOWER(COALESCE(d1_direct.ten, d1_sub.ten, '')) LIKE ?
         OR LOWER(COALESCE(ns.cap_bac, '')) LIKE ?
         OR LOWER(COALESCE(ns.chuc_vu, '')) LIKE ?
       )`;
@@ -1076,11 +1202,19 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
   public getNhanSuById(id: number): NhanSu | null {
     const list = this.query<NhanSu>(
-      `SELECT c.id, c.ho_ten, c.ngay_sinh, c.gioi_tinh, c.id_don_vi_cap_2 as id_don_vi, c.ma_the_bhyt as the_bhyt, c.cap_bac, c.chuc_vu, d2.ten as ten_don_vi, d1.id as id_don_vi_cap_1, d1.ten as ten_don_vi_cap_1, t.tu_ngay, t.den_ngay
-         FROM can_bo c
-         LEFT JOIN don_vi_cap_2 d2 ON c.id_don_vi_cap_2 = d2.id
-         LEFT JOIN don_vi_cap_1 d1 ON d2.id_don_vi_cap_1 = d1.id
-         LEFT JOIN the_bhyt t ON c.ma_the_bhyt = t.ma_the_bhyt
+      `SELECT 
+         c.id, c.ho_ten, c.ngay_sinh, c.gioi_tinh, 
+         c.id_don_vi_cap_2 as id_don_vi, 
+         COALESCE(c.id_don_vi_cap_1, d2.id_don_vi_cap_1) as id_don_vi_cap_1,
+         c.ma_the_bhyt as the_bhyt, c.ma_the_bhyt, c.cap_bac, c.chuc_vu, 
+         d2.ten as ten_don_vi, d2.ten as ten_don_vi_cap_2,
+         COALESCE(d1_direct.ten, d1_sub.ten) as ten_don_vi_cap_1, 
+         t.tu_ngay, t.den_ngay
+       FROM can_bo c
+       LEFT JOIN don_vi_cap_2 d2 ON c.id_don_vi_cap_2 = d2.id
+       LEFT JOIN don_vi_cap_1 d1_sub ON d2.id_don_vi_cap_1 = d1_sub.id
+       LEFT JOIN don_vi_cap_1 d1_direct ON c.id_don_vi_cap_1 = d1_direct.id
+       LEFT JOIN the_bhyt t ON c.ma_the_bhyt = t.ma_the_bhyt
        WHERE c.id = ?`,
       [id]
     );
@@ -1095,15 +1229,20 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       if (!hoTen) return null;
 
       const maThe = (ns.ma_the_bhyt || ns.the_bhyt || '').trim().toUpperCase();
-      let idDonVi = ns.id_don_vi_cap_2 || ns.id_don_vi || null;
-      if (idDonVi) {
-        idDonVi = Number(idDonVi);
-        const checkUnit = this.query("SELECT id FROM don_vi_cap_2 WHERE id = ?", [idDonVi]);
-        if (checkUnit.length === 0) {
-          idDonVi = 1;
+      let cap1Id = (ns as any).id_don_vi_cap_1 ? Number((ns as any).id_don_vi_cap_1) : null;
+      let idDonVi = ns.id_don_vi_cap_2 || ns.id_don_vi ? Number(ns.id_don_vi_cap_2 || ns.id_don_vi) : null;
+      if (idDonVi && !cap1Id) {
+        const sub = this.query<{ id_don_vi_cap_1: number }>("SELECT id_don_vi_cap_1 FROM don_vi_cap_2 WHERE id = ?", [idDonVi]);
+        if (sub.length > 0) cap1Id = sub[0].id_don_vi_cap_1;
+      }
+      if (cap1Id && idDonVi) {
+        const checkMatch = this.query<{ id: number }>("SELECT id FROM don_vi_cap_2 WHERE id = ? AND id_don_vi_cap_1 = ?", [idDonVi, cap1Id]);
+        if (checkMatch.length === 0) {
+          idDonVi = null;
         }
-      } else {
-        idDonVi = 1;
+      }
+      if (!cap1Id && !idDonVi) {
+        cap1Id = 1;
       }
 
       // 1. Insert/Update the_bhyt first if provided
@@ -1131,13 +1270,14 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       if (ns.id) {
         res = this.run(
           `UPDATE can_bo SET 
-            ho_ten = ?, ngay_sinh = ?, ma_the_bhyt = ?, gioi_tinh = ?, id_don_vi_cap_2 = ?, cap_bac = ?, chuc_vu = ?
+            ho_ten = ?, ngay_sinh = ?, ma_the_bhyt = ?, gioi_tinh = ?, id_don_vi_cap_1 = ?, id_don_vi_cap_2 = ?, cap_bac = ?, chuc_vu = ?
            WHERE id = ?`,
           [
             hoTen,
             ns.ngay_sinh || null,
             maThe || null,
             ns.gioi_tinh || 'Nam',
+            cap1Id,
             idDonVi,
             ns.cap_bac || '',
             ns.chuc_vu || '',
@@ -1151,13 +1291,14 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         }
       } else {
         res = this.run(
-          `INSERT INTO can_bo (ho_ten, ngay_sinh, ma_the_bhyt, gioi_tinh, id_don_vi_cap_2, cap_bac, chuc_vu)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO can_bo (ho_ten, ngay_sinh, ma_the_bhyt, gioi_tinh, id_don_vi_cap_1, id_don_vi_cap_2, cap_bac, chuc_vu)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             hoTen,
             ns.ngay_sinh || null,
             maThe || null,
             ns.gioi_tinh || 'Nam',
+            cap1Id,
             idDonVi,
             ns.cap_bac || '',
             ns.chuc_vu || ''
@@ -1177,7 +1318,12 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   }
 
   public deleteNhanSu(id: number): boolean {
-    return this.run("DELETE FROM can_bo WHERE id = ?", [id]).success;
+    const res = this.run("DELETE FROM can_bo WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   // ===================== CRUD THUOC =====================
@@ -1186,8 +1332,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   }
 
   public saveThuoc(t: Partial<Thuoc>): boolean {
+    let res;
     if (t.id) {
-      return this.run(
+      res = this.run(
         `UPDATE thuoc SET 
           ten = ?, don_vi_tinh = ?, don_gia = ?, ghi_chu = ?, 
           ton_kho = ?, ham_luong = ?, cach_dung_mac_dinh = ? 
@@ -1202,9 +1349,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
           t.cach_dung_mac_dinh || '',
           t.id
         ]
-      ).success;
+      );
     } else {
-      return this.run(
+      res = this.run(
         `INSERT OR IGNORE INTO thuoc (ten, don_vi_tinh, don_gia, ghi_chu, ton_kho, ham_luong, cach_dung_mac_dinh)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -1216,12 +1363,22 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
           t.ham_luong || '',
           t.cach_dung_mac_dinh || ''
         ]
-      ).success;
+      );
     }
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   public deleteThuoc(id: number): boolean {
-    return this.run("DELETE FROM thuoc WHERE id = ?", [id]).success;
+    const res = this.run("DELETE FROM thuoc WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   // ===================== CRUD VAT TU =====================
@@ -1230,21 +1387,32 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   }
 
   public saveVatTu(vt: Partial<VatTu>): boolean {
+    let res;
     if (vt.id) {
-      return this.run(
+      res = this.run(
         "UPDATE vat_tu SET ten = ?, don_vi_tinh = ?, don_gia = ?, ghi_chu = ?, ton_kho = ? WHERE id = ?",
         [vt.ten || '', vt.don_vi_tinh || 'Cái', vt.don_gia || 0, vt.ghi_chu || '', vt.ton_kho || 0, vt.id]
-      ).success;
+      );
     } else {
-      return this.run(
+      res = this.run(
         "INSERT OR IGNORE INTO vat_tu (ten, don_vi_tinh, don_gia, ghi_chu, ton_kho) VALUES (?, ?, ?, ?, ?)",
         [vt.ten || '', vt.don_vi_tinh || 'Cái', vt.don_gia || 0, vt.ghi_chu || '', vt.ton_kho || 50]
-      ).success;
+      );
     }
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   public deleteVatTu(id: number): boolean {
-    return this.run("DELETE FROM vat_tu WHERE id = ?", [id]).success;
+    const res = this.run("DELETE FROM vat_tu WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   // ===================== CRUD DICH VU KT =====================
@@ -1253,21 +1421,32 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
   }
 
   public saveDichVuKT(dv: Partial<DichVuKT>): boolean {
+    let res;
     if (dv.id) {
-      return this.run(
+      res = this.run(
         "UPDATE dich_vu_kt SET ten = ?, don_vi_tinh = ?, don_gia = ?, ghi_chu = ? WHERE id = ?",
         [dv.ten || '', dv.don_vi_tinh || 'Lần', dv.don_gia || 0, dv.ghi_chu || '', dv.id]
-      ).success;
+      );
     } else {
-      return this.run(
+      res = this.run(
         "INSERT OR IGNORE INTO dich_vu_kt (ten, don_vi_tinh, don_gia, ghi_chu) VALUES (?, ?, ?, ?)",
         [dv.ten || '', dv.don_vi_tinh || 'Lần', dv.don_gia || 0, dv.ghi_chu || '']
-      ).success;
+      );
     }
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   public deleteDichVuKT(id: number): boolean {
-    return this.run("DELETE FROM dich_vu_kt WHERE id = ?", [id]).success;
+    const res = this.run("DELETE FROM dich_vu_kt WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   // ===================== KHÔI PHỤC / NẠP DANH MỤC Y TẾ CHUẨN =====================
@@ -1675,6 +1854,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
 
     this.persistDatabase();
+    this.notify();
     return true;
   }
 
@@ -1694,7 +1874,12 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
   public deleteMauBenh(id: number): boolean {
     this.run("DELETE FROM mau_benh_chi_tiet WHERE id_mau_benh = ?", [id]);
-    return this.run("DELETE FROM mau_benh WHERE id = ?", [id]).success;
+    const res = this.run("DELETE FROM mau_benh WHERE id = ?", [id]);
+    if (res.success) {
+      this.persistDatabase();
+      this.notify();
+    }
+    return res.success;
   }
 
   /**
@@ -1966,18 +2151,20 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         ns.chuc_vu as chuc_vu_nhan_su,
         cq.ten as ten_don_vi_nhan_su,
         cq.ten as ten_don_vi_cap_2,
-        dv1.id as id_don_vi_cap_1,
-        dv1.ten as ten_don_vi_cap_1,
+        COALESCE(ns.id_don_vi_cap_1, cq.id_don_vi_cap_1) as id_don_vi_cap_1,
+        COALESCE(dv1_ns_direct.ten, dv1.ten) as ten_don_vi_cap_1,
         bs.ho_ten as ten_bac_si,
-        dv1_bs.ten as ten_don_vi_cap_1_bac_si,
+        COALESCE(dv1_bs_direct.ten, dv1_bs.ten) as ten_don_vi_cap_1_bac_si,
         mb.ten_benh as ten_mau_benh
       FROM ho_so_kham hs
       LEFT JOIN can_bo ns ON hs.id_nhan_su = ns.id
       LEFT JOIN don_vi_cap_2 cq ON ns.id_don_vi_cap_2 = cq.id
       LEFT JOIN don_vi_cap_1 dv1 ON cq.id_don_vi_cap_1 = dv1.id
+      LEFT JOIN don_vi_cap_1 dv1_ns_direct ON ns.id_don_vi_cap_1 = dv1_ns_direct.id
       LEFT JOIN bac_si bs ON hs.id_bac_si = bs.id
       LEFT JOIN don_vi_cap_2 cq_bs ON bs.id_don_vi = cq_bs.id
       LEFT JOIN don_vi_cap_1 dv1_bs ON cq_bs.id_don_vi_cap_1 = dv1_bs.id
+      LEFT JOIN don_vi_cap_1 dv1_bs_direct ON bs.id_don_vi_cap_1 = dv1_bs_direct.id
       LEFT JOIN mau_benh mb ON hs.id_mau_benh = mb.id
       WHERE 1=1
     `;
@@ -1991,18 +2178,18 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         OR LOWER(hs.chan_doan) LIKE ? 
         OR LOWER(COALESCE(ns.ma_the_bhyt, '')) LIKE ?
         OR LOWER(COALESCE(cq.ten, '')) LIKE ?
-        OR LOWER(COALESCE(dv1.ten, '')) LIKE ?
+        OR LOWER(COALESCE(dv1_ns_direct.ten, dv1.ten, '')) LIKE ?
         OR LOWER(COALESCE(ns.cap_bac, '')) LIKE ?
         OR LOWER(COALESCE(ns.chuc_vu, '')) LIKE ?
       )`;
       params.push(s, s, s, s, s, s, s, s);
     }
     if (filter?.idDonViCap1) {
-      sql += ` AND (dv1.id = ? OR cq.id_don_vi_cap_1 = ?)`;
-      params.push(filter.idDonViCap1, filter.idDonViCap1);
+      sql += ` AND (ns.id_don_vi_cap_1 = ? OR dv1.id = ? OR cq.id_don_vi_cap_1 = ?)`;
+      params.push(filter.idDonViCap1, filter.idDonViCap1, filter.idDonViCap1);
     } else if (filter?.idDonVi) {
-      sql += ` AND (dv1.id = ? OR cq.id = ? OR cq.id_don_vi_cap_1 = ?)`;
-      params.push(filter.idDonVi, filter.idDonVi, filter.idDonVi);
+      sql += ` AND (ns.id_don_vi_cap_1 = ? OR dv1.id = ? OR cq.id = ? OR cq.id_don_vi_cap_1 = ?)`;
+      params.push(filter.idDonVi, filter.idDonVi, filter.idDonVi, filter.idDonVi);
     }
     if (filter?.tuNgay) {
       sql += ` AND hs.ngay_kham >= ?`;

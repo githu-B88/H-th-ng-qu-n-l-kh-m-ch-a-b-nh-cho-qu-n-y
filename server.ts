@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -14,9 +13,6 @@ import {
   MORE_NHAN_SU,
   SEED_NGUOI_DUNG
 } from './src/db/seed-data';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
 const app = express();
@@ -79,9 +75,11 @@ CREATE TABLE IF NOT EXISTS bac_si (
     the_bhyt TEXT,
     ngay_sinh TEXT,
     gioi_tinh TEXT DEFAULT 'Nam' CHECK(gioi_tinh IN ('Nam', 'Nữ', 'Khác')),
+    id_don_vi_cap_1 INTEGER,
     id_don_vi INTEGER,
     chuyen_mon TEXT,
     ghi_chu TEXT,
+    FOREIGN KEY (id_don_vi_cap_1) REFERENCES don_vi_cap_1(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (id_don_vi) REFERENCES don_vi_cap_2(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
@@ -98,11 +96,13 @@ CREATE TABLE IF NOT EXISTS can_bo (
     ho_ten TEXT NOT NULL,
     ngay_sinh TEXT,
     gioi_tinh TEXT DEFAULT 'Nam' CHECK(gioi_tinh IN ('Nam', 'Nữ', 'Khác')),
+    id_don_vi_cap_1 INTEGER,
     id_don_vi_cap_2 INTEGER,
     ma_the_bhyt TEXT,
     cap_bac TEXT,
     chuc_vu TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_don_vi_cap_1) REFERENCES don_vi_cap_1(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (id_don_vi_cap_2) REFERENCES don_vi_cap_2(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (ma_the_bhyt) REFERENCES the_bhyt(ma_the_bhyt) ON UPDATE CASCADE ON DELETE SET NULL
 );
@@ -278,35 +278,83 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 `;
   db.exec(schema);
 
-  // SEED DEFAULT DATA
-  // 1. Check and seed 'don_vi_cap_1'
-  const countDv1 = db.prepare('SELECT COUNT(*) as count FROM don_vi_cap_1').get() as { count: number };
-  if (countDv1.count === 0) {
-    console.log("Seeding don_vi_cap_1...");
-    const insert = db.prepare('INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) VALUES (?, ?, ?)');
+  // MIGRATIONS: Bổ sung cột id_don_vi_cap_1 cho bac_si và can_bo nếu chưa có
+  try {
+    db.prepare("ALTER TABLE bac_si ADD COLUMN id_don_vi_cap_1 INTEGER;").run();
+  } catch {}
+  try {
+    db.prepare("ALTER TABLE can_bo ADD COLUMN id_don_vi_cap_1 INTEGER;").run();
+  } catch {}
+  try {
+    // Tự động suy ra id_don_vi_cap_1 từ don_vi_cap_2 nếu hiện tại đang để trống
+    db.prepare(`
+      UPDATE bac_si 
+      SET id_don_vi_cap_1 = (SELECT id_don_vi_cap_1 FROM don_vi_cap_2 WHERE don_vi_cap_2.id = bac_si.id_don_vi)
+      WHERE id_don_vi_cap_1 IS NULL AND id_don_vi IS NOT NULL;
+    `).run();
+    db.prepare(`
+      UPDATE can_bo 
+      SET id_don_vi_cap_1 = (SELECT id_don_vi_cap_1 FROM don_vi_cap_2 WHERE don_vi_cap_2.id = can_bo.id_don_vi_cap_2)
+      WHERE id_don_vi_cap_1 IS NULL AND id_don_vi_cap_2 IS NOT NULL;
+    `).run();
+  } catch {}
+
+  // SEED & SYNC DEFAULT DATA
+  // 1. Đồng bộ và xóa triệt để các đơn vị cũ: Lữ đoàn 127, Lữ đoàn 175, Trung đoàn 551 và các đơn vị cấp 2 tương ứng
+  try {
+    db.prepare(`
+      DELETE FROM don_vi_cap_2 
+      WHERE LOWER(ten) LIKE '%hải đội%' 
+         OR LOWER(ten) LIKE '%hai doi%' 
+         OR LOWER(ten) LIKE '%127%' 
+         OR LOWER(ten) LIKE '%175%' 
+         OR LOWER(ten) LIKE '%551%'
+    `).run();
+    db.prepare(`
+      DELETE FROM don_vi_cap_1 
+      WHERE LOWER(ten) LIKE '%127%' 
+         OR LOWER(ten) LIKE '%175%' 
+         OR LOWER(ten) LIKE '%551%'
+    `).run();
+
+    // Khởi tạo các Đơn vị cấp 1 nếu chưa có
+    const insertCap1 = db.prepare(`
+      INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) 
+      VALUES (?, ?, ?)
+    `);
     for (const cap1 of SEED_DON_VI_CAP_1) {
-      insert.run(cap1.id, cap1.ten, cap1.ghi_chu || '');
+      insertCap1.run(cap1.id, cap1.ten, cap1.ghi_chu || '');
     }
-  }
 
-  // 2. Check and seed 'don_vi_cap_2'
-  const countDv2 = db.prepare('SELECT COUNT(*) as count FROM don_vi_cap_2').get() as { count: number };
-  if (countDv2.count === 0) {
-    console.log("Seeding don_vi_cap_2...");
-    const insert = db.prepare('INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) VALUES (?, ?, ?, ?)');
+    // Khởi tạo các Đơn vị cấp 2 trực thuộc nếu chưa có
+    const insertCap2 = db.prepare(`
+      INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) 
+      VALUES (?, ?, ?, ?)
+    `);
     for (const cq of SEED_CO_QUAN) {
-      insert.run(cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '');
+      insertCap2.run(cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '');
     }
-  }
 
-  // 3. Check and seed 'bac_si'
-  const countBs = db.prepare('SELECT COUNT(*) as count FROM bac_si').get() as { count: number };
-  if (countBs.count === 0) {
-    console.log("Seeding bac_si...");
-    const insert = db.prepare('INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    // Seed Bác sĩ: Dùng INSERT OR IGNORE để không ghi đè chỉnh sửa của người dùng
+    const insertBs = db.prepare(`
+      INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi_cap_1, id_don_vi, chuyen_mon, ghi_chu) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
     for (const bs of SEED_BAC_SI) {
-      insert.run(bs.id, bs.ho_ten, bs.the_bhyt || null, bs.ngay_sinh || null, bs.gioi_tinh || 'Nam', bs.id_don_vi || null, bs.chuyen_mon || null, bs.ghi_chu || null);
+      insertBs.run(
+        bs.id,
+        bs.ho_ten,
+        bs.the_bhyt || null,
+        bs.ngay_sinh || null,
+        bs.gioi_tinh || 'Nam',
+        (bs as any).id_don_vi_cap_1 || 1,
+        bs.id_don_vi || null,
+        bs.chuyen_mon || null,
+        bs.ghi_chu || null
+      );
     }
+  } catch (syncErr) {
+    console.error("Error syncing organizational units in server:", syncErr);
   }
 
   // 4. Check and seed 'can_bo' and 'the_bhyt'

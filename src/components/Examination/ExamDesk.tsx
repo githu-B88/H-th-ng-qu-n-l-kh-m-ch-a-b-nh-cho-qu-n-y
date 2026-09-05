@@ -379,6 +379,47 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
       return;
     }
 
+    // Kiểm tra phân quyền khám bệnh theo quy định:
+    // Bác sĩ đơn vị cấp 1 nào chỉ được khám cho đơn vị cấp 1 của quân nhân đó.
+    // Riêng bác sĩ Phòng Tham mưu Vùng được khám cho cả 3 phòng: Tham mưu, Chính trị, Hậu cần-Kỹ thuật Vùng.
+    if (activeDoctor && selectedPatient) {
+      const isDocThamMuu = isThamMuuDoctor(activeDoctor);
+      const patientCap1Id =
+        (selectedPatient as any).id_don_vi_cap_1 ||
+        (selectedPatient.id_don_vi_cap_2
+          ? donViCap2List.find((d) => d.id === selectedPatient.id_don_vi_cap_2)?.id_don_vi_cap_1
+          : undefined);
+      const isPatient3Rooms =
+        patientCap1Id === 1 ||
+        patientCap1Id === 2 ||
+        patientCap1Id === 3 ||
+        isPhongVung((selectedPatient as any).ten_don_vi_cap_1);
+      const docCap1Id =
+        (activeDoctor as any)?.id_don_vi_cap_1 ||
+        (activeDoctor?.id_don_vi
+          ? donViCap2List.find((d) => d.id === activeDoctor.id_don_vi)?.id_don_vi_cap_1
+          : undefined);
+      const docCap1Name =
+        (activeDoctor as any)?.ten_don_vi_cap_1 ||
+        (docCap1Id ? donViCap1List.find((d) => d.id === docCap1Id)?.ten : '');
+
+      if (isDocThamMuu) {
+        if (!isPatient3Rooms) {
+          setFeedbackMessage({
+            type: 'error',
+            text: `Bác sĩ Phòng Tham mưu Vùng chỉ được khám cho quân nhân thuộc 3 phòng (Tham mưu, Chính trị, Hậu cần-Kỹ thuật Vùng). Quân nhân này thuộc: ${(selectedPatient as any).ten_don_vi_cap_1 || 'Đơn vị khác'}!`
+          });
+          return;
+        }
+      } else if (docCap1Id && patientCap1Id && docCap1Id !== patientCap1Id) {
+        setFeedbackMessage({
+          type: 'error',
+          text: `Bác sĩ thuộc đơn vị "${docCap1Name || 'này'}" chỉ được khám cho quân nhân cùng đơn vị cấp 1. Quân nhân này thuộc "${(selectedPatient as any).ten_don_vi_cap_1 || 'Đơn vị khác'}"!`
+        });
+        return;
+      }
+    }
+
     if (!chanDoan.trim()) {
       setFeedbackMessage({
         type: 'error',

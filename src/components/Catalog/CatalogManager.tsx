@@ -49,6 +49,9 @@ export const CatalogManager: React.FC = () => {
 
   const [isCoQuanModalOpen, setIsCoQuanModalOpen] = useState(false);
   const [editingCoQuan, setEditingCoQuan] = useState<Partial<CoQuan>>({});
+  const [isDonViCap1ModalOpen, setIsDonViCap1ModalOpen] = useState(false);
+  const [editingDonViCap1, setEditingDonViCap1] = useState<Partial<{ id?: number; ten: string; ghi_chu: string }>>({});
+  const [selectedCap1Filter, setSelectedCap1Filter] = useState<number | 'all'>('all');
   const [isSeedConfirmModalOpen, setIsSeedConfirmModalOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
 
@@ -125,7 +128,29 @@ export const CatalogManager: React.FC = () => {
     }
   };
 
-  // Handlers for Co Quan
+  // Handlers for Co Quan & Don Vi Cap 1
+  const handleSaveDonViCap1 = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDonViCap1.ten?.trim()) return;
+    (sqliteService as any).saveDonViCap1(editingDonViCap1);
+    setIsDonViCap1ModalOpen(false);
+    loadData();
+  };
+
+  const handleDeleteDonViCap1 = (id: number) => {
+    const d1 = donViCap1List.find((d) => d.id === id);
+    const subUnits = coQuanList.filter((c) => c.id_don_vi_cap_1 === id);
+    if (
+      window.confirm(
+        `Bạn có chắc chắn muốn xóa Đơn vị cấp 1 "${d1?.ten || id}" cùng ${subUnits.length} đơn vị cấp 2 trực thuộc?`
+      )
+    ) {
+      (sqliteService as any).deleteDonViCap1(id);
+      if (selectedCap1Filter === id) setSelectedCap1Filter('all');
+      loadData();
+    }
+  };
+
   const handleSaveCoQuan = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCoQuan.ten_co_quan?.trim()) return;
@@ -334,16 +359,28 @@ export const CatalogManager: React.FC = () => {
           )}
 
           {activeCatalogTab === 'co_quan' && (
-            <button
-              onClick={() => {
-                setEditingCoQuan({});
-                setIsCoQuanModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold shadow-xs"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Thêm Cơ Quan / Phòng Ban</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setEditingDonViCap1({});
+                  setIsDonViCap1ModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Thêm Đơn Vị Cấp 1</span>
+              </button>
+              <button
+                onClick={() => {
+                  setEditingCoQuan({});
+                  setIsCoQuanModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Thêm Cơ Quan / Ban Trực Thuộc</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -553,57 +590,147 @@ export const CatalogManager: React.FC = () => {
 
       {/* ================= CO QUAN TAB ================= */}
       {activeCatalogTab === 'co_quan' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <th className="py-3 px-4 font-semibold w-12 text-center">STT</th>
-                  <th className="py-3 px-4 font-semibold">Khối (Đơn vị cấp 1)</th>
-                  <th className="py-3 px-4 font-semibold">Tên Cơ Quan / Phòng Ban</th>
-                  <th className="py-3 px-4 font-semibold">Ghi Chú Chức Năng</th>
-                  <th className="py-3 px-4 font-semibold text-center">Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {coQuanList
-                  .filter((c) => {
-                    if (!search.trim()) return true;
-                    const d1 = donViCap1List.find(d => d.id === c.id_don_vi_cap_1);
-                    return c.ten_co_quan.toLowerCase().includes(search.toLowerCase()) || (d1 && d1.ten.toLowerCase().includes(search.toLowerCase()));
-                  })
-                  .map((c, idx) => {
-                    const d1 = donViCap1List.find(d => d.id === c.id_don_vi_cap_1);
-                    return (
-                      <tr key={c.id} className="hover:bg-sky-50/40 transition-colors">
-                        <td className="py-3 px-4 text-slate-400 text-center font-mono">{idx + 1}</td>
-                        <td className="py-3 px-4 font-semibold text-sky-800">{d1?.ten || '---'}</td>
-                        <td className="py-3 px-4 font-bold text-slate-900">{c.ten_co_quan}</td>
-                        <td className="py-3 px-4 text-slate-600">{c.ghi_chu || '---'}</td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => {
-                                setEditingCoQuan(c);
-                                setIsCoQuanModalOpen(true);
-                              }}
-                              className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCoQuan(c.id)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+        <div className="space-y-4">
+          {/* Don Vi Cap 1 Summary & Filter Cards */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Building className="w-4 h-4 text-sky-600" />
+                <span>Danh Sách Đơn Vị Cấp 1 ({donViCap1List.length} đơn vị)</span>
+              </div>
+              <span className="text-[11px] text-slate-500">
+                Nhấp vào đơn vị để lọc các cơ quan / ban trực thuộc
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setSelectedCap1Filter('all')}
+                className={`p-2.5 rounded-lg border text-left transition-all flex items-center justify-between ${
+                  selectedCap1Filter === 'all'
+                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50'
+                }`}
+              >
+                <div>
+                  <div className="text-xs font-bold">Tất cả các khối</div>
+                  <div className={`text-[10px] ${selectedCap1Filter === 'all' ? 'text-sky-100' : 'text-slate-400'}`}>
+                    Toàn bộ đơn vị cấp 2
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                  selectedCap1Filter === 'all' ? 'bg-sky-700 text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {coQuanList.length}
+                </span>
+              </button>
+
+              {donViCap1List.map((d1) => {
+                const subCount = coQuanList.filter((c) => c.id_don_vi_cap_1 === d1.id).length;
+                const isSelected = selectedCap1Filter === d1.id;
+                return (
+                  <div
+                    key={d1.id}
+                    onClick={() => setSelectedCap1Filter(d1.id)}
+                    className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between group ${
+                      isSelected
+                        ? 'bg-sky-700 text-white border-sky-700 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="text-xs font-bold truncate">{d1.ten}</div>
+                      <div className={`text-[10px] truncate ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>
+                        {d1.ghi_chu || 'Đơn vị cấp 1'}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                        isSelected ? 'bg-sky-800 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {subCount}
+                      </span>
+                      <button
+                        type="button"
+                        title="Sửa đơn vị cấp 1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingDonViCap1(d1);
+                          setIsDonViCap1ModalOpen(true);
+                        }}
+                        className={`p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity ${
+                          isSelected ? 'hover:bg-sky-800 text-sky-100' : 'hover:bg-slate-100 text-slate-500 hover:text-amber-600'
+                        }`}
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sub units table */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                    <th className="py-3 px-4 font-semibold w-12 text-center">STT</th>
+                    <th className="py-3 px-4 font-semibold">Khối (Đơn vị cấp 1)</th>
+                    <th className="py-3 px-4 font-semibold">Tên Cơ Quan / Phòng Ban</th>
+                    <th className="py-3 px-4 font-semibold">Ghi Chú Chức Năng</th>
+                    <th className="py-3 px-4 font-semibold text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {coQuanList
+                    .filter((c) => {
+                      if (selectedCap1Filter !== 'all' && c.id_don_vi_cap_1 !== selectedCap1Filter) {
+                        return false;
+                      }
+                      if (!search.trim()) return true;
+                      const d1 = donViCap1List.find((d) => d.id === c.id_don_vi_cap_1);
+                      return (
+                        c.ten_co_quan.toLowerCase().includes(search.toLowerCase()) ||
+                        (d1 && d1.ten.toLowerCase().includes(search.toLowerCase()))
+                      );
+                    })
+                    .map((c, idx) => {
+                      const d1 = donViCap1List.find((d) => d.id === c.id_don_vi_cap_1);
+                      return (
+                        <tr key={c.id} className="hover:bg-sky-50/40 transition-colors">
+                          <td className="py-3 px-4 text-slate-400 text-center font-mono">{idx + 1}</td>
+                          <td className="py-3 px-4 font-semibold text-sky-800">{d1?.ten || '---'}</td>
+                          <td className="py-3 px-4 font-bold text-slate-900">{c.ten_co_quan}</td>
+                          <td className="py-3 px-4 text-slate-600">{c.ghi_chu || '---'}</td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingCoQuan(c);
+                                  setIsCoQuanModalOpen(true);
+                                }}
+                                className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCoQuan(c.id)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -976,6 +1103,57 @@ export const CatalogManager: React.FC = () => {
               className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-bold"
             >
               Lưu Cơ Quan
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Add/Edit Don Vi Cap 1 */}
+      <Modal
+        isOpen={isDonViCap1ModalOpen}
+        onClose={() => setIsDonViCap1ModalOpen(false)}
+        title={editingDonViCap1.id ? 'Sửa Đơn Vị Cấp 1' : 'Thêm Đơn Vị Cấp 1 Mới'}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSaveDonViCap1} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Tên Đơn vị cấp 1 <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="VD: Phòng Tham mưu Vùng, Phòng Chính trị Vùng..."
+              value={editingDonViCap1.ten || ''}
+              onChange={(e) => setEditingDonViCap1({ ...editingDonViCap1, ten: e.target.value })}
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Ghi chú chức năng nhiệm vụ</label>
+            <textarea
+              rows={3}
+              placeholder="Ghi chú thêm về cơ cấu hoặc chức năng nhiệm vụ..."
+              value={editingDonViCap1.ghi_chu || ''}
+              onChange={(e) => setEditingDonViCap1({ ...editingDonViCap1, ghi_chu: e.target.value })}
+              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setIsDonViCap1ModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold"
+            >
+              Lưu Đơn Vị Cấp 1
             </button>
           </div>
         </form>

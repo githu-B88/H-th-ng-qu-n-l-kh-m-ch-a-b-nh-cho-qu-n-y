@@ -25,6 +25,7 @@ export interface BacSi {
   the_bhyt?: string;
   ngay_sinh?: string;
   gioi_tinh: 'Nam' | 'Nữ' | 'Khác';
+  id_don_vi_cap_1?: number;
   id_don_vi?: number;
   ten_don_vi?: string;
   ten_don_vi_cap_1?: string;
@@ -38,8 +39,10 @@ export interface CanBo {
   ngay_sinh?: string;
   ma_the_bhyt?: string;
   gioi_tinh: 'Nam' | 'Nữ' | 'Khác';
+  id_don_vi_cap_1?: number;
   id_don_vi_cap_2?: number;
   ten_don_vi?: string;
+  ten_don_vi_cap_1?: string;
   cap_bac?: string;
   chuc_vu?: string;
 }
