@@ -292,72 +292,40 @@ export const Reports: React.FC = () => {
     if (activeTab === 'chi_phi_can_bo') {
       const headers = [
         'STT',
-        'Mã Cán Bộ',
-        'Họ Tên Cán Bộ',
-        'Ngày Sinh',
-        'Giới Tính',
-        'Mã Thẻ BHYT',
-        'Cấp Bậc',
-        'Chức Vụ',
-        'Đơn Vị Cấp 1',
-        'Đơn Vị Trực Thuộc (Cấp 2)',
-        'Mã Hồ Sơ',
-        'Ngày Khám',
-        'Chẩn Đoán Bệnh',
-        'Bác Sĩ Khám',
-        'Tổng Chi Phí KCB (VND)'
+        'Tên bệnh nhân',
+        'Đơn vị',
+        'Thẻ bảo hiểm',
+        'Ngày khám',
+        'Chẩn đoán',
+        'Ghi chú'
       ];
       csvString += headers.map(escapeCSV).join(',') + '\r\n';
 
       rawExamsData.forEach((row, idx) => {
-        const maCanBo = row.id_nhan_su ? `CB-${String(row.id_nhan_su).padStart(4, '0')}` : '';
-        const ngaySinh = row.ngay_sinh_nhan_su || row.ngay_sinh || '';
-        const gioiTinh = row.gioi_tinh_nhan_su || row.gioi_tinh || '';
-        const maTheBhyt = row.ma_the_bhyt || '';
-        const capBac = row.cap_bac_nhan_su || row.cap_bac || '';
-        const chucVu = row.chuc_vu_nhan_su || row.chuc_vu || '';
-        const donViCap1 = row.ten_don_vi_cap_1 || 'Khối Cơ quan / Chưa phân bổ';
-        const donViCap2 = row.ten_don_vi_cap_2 || row.ten_don_vi || '---';
+        const theBHYT = row.ma_the_bhyt || '';
+        const chanDoan = row.chan_doan || '';
+        const donVi = row.ten_don_vi_cap_1 || '';
+        
+        let formattedDate = row.ngay_kham || '';
+        if (formattedDate.includes('-')) {
+          const parts = formattedDate.split('-');
+          if (parts.length === 3) {
+            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+        }
 
         const lineData = [
           idx + 1,
-          maCanBo,
           row.ten_nhan_su || '',
-          ngaySinh,
-          gioiTinh,
-          maTheBhyt,
-          capBac,
-          chucVu,
-          donViCap1,
-          donViCap2,
-          row.ma_ho_so || '',
-          row.ngay_kham || '',
-          row.chan_doan || '',
-          row.ten_bac_si || '',
-          row.tong_chi_phi || 0
+          donVi,
+          theBHYT,
+          formattedDate,
+          chanDoan,
+          '' // Ghi chú mặc định trống
         ];
 
         csvString += lineData.map(escapeCSV).join(',') + '\r\n';
       });
-
-      const summaryLine = [
-        'TỔNG CỘNG',
-        '',
-        `${rawExamsData.length} lượt khám`,
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Tổng chi phí KCB:',
-        totalCostExams
-      ];
-      csvString += summaryLine.map(escapeCSV).join(',') + '\r\n';
     } else {
       const headers = [
         'STT',
