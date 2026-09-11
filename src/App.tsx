@@ -6,6 +6,7 @@ import { Header } from './components/Header';
 import { ExamDesk } from './components/Examination/ExamDesk';
 import { PrescriptionPrint } from './components/Examination/PrescriptionPrint';
 import { PrintTemplate } from './components/PrintTemplate/PrintTemplate';
+import { BatchPrintTemplate } from './components/PrintTemplate/BatchPrintTemplate';
 import { MedicalRecordsList } from './components/Records/MedicalRecordsList';
 import { PatientManager } from './components/Patients/PatientManager';
 import { DoctorManager } from './components/Doctors/DoctorManager';
@@ -230,17 +231,17 @@ export default function App() {
         </main>
       </div>
       {/* Print Template (Hidden on screen, 100% visible on print for A4) */}
-      {printRecord && <PrintTemplate record={printRecord} />}
-      
-      {/* Batch Print Templates */}
-      {batchPrintRecords.length > 0 && (
-        <div className="hidden print:block w-full">
-          {batchPrintRecords.map((rec, index) => (
-            <div key={rec.id} style={{ pageBreakAfter: index === batchPrintRecords.length - 1 ? 'auto' : 'always' }}>
-              <PrintTemplate record={rec} />
-            </div>
-          ))}
+      {printRecord && (
+        <div id="print-area" className="hidden print:block w-full">
+          <div className="page-break-container">
+            <PrintTemplate record={printRecord} />
+          </div>
         </div>
+      )}
+      
+      {/* Batch Print Templates (Tái sử dụng Component in đơn lẻ với ngắt trang page-break-container) */}
+      {batchPrintRecords.length > 0 && (
+        <BatchPrintTemplate records={batchPrintRecords} />
       )}
       
       {/* Printable Prescription Modal Preview */}

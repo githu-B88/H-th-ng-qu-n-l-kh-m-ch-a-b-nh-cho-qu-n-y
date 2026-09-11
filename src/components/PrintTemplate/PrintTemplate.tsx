@@ -7,10 +7,13 @@ import { getFormattedDonVi, formatDonViCap1BacSiHeader } from '../../utils/forma
 export { docTienBangChu };
 
 interface PrintTemplateProps {
-  record: HoSoKham;
+  record?: HoSoKham;
+  data?: HoSoKham;
 }
 
-export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
+export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record: propRecord, data: propData }) => {
+  const record = propRecord || propData;
+  if (!record) return null;
   // Format date helper: YYYY-MM-DD -> DD/MM/YYYY
   const formatDateVN = (dateStr?: string) => {
     if (!dateStr) return '';
@@ -80,8 +83,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
 
   return (
     <div
-      id="print-area"
-      className="hidden print:block bg-white text-black font-serif text-[12pt] leading-[1.3] p-0 m-0 w-full"
+      className="single-print-template bg-white text-black font-serif text-[12pt] leading-[1.3] p-0 m-0 w-full"
       style={{
         fontFamily: "'Times New Roman', Times, serif",
         boxSizing: 'border-box'
@@ -379,4 +381,5 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record }) => {
   );
 };
 
+export const SinglePrintTemplate = PrintTemplate;
 export default PrintTemplate;

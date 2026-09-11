@@ -36,6 +36,25 @@
       box-sizing: border-box !important;
     }
 
+    /* CSS Print Page Break cho in hàng loạt */
+    .page-break-container {
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      display: block !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+      position: relative !important;
+    }
+
+    .page-break-container:last-child {
+      page-break-after: auto !important;
+      break-after: auto !important;
+    }
+
     .print-table {
       width: 100% !important;
       border-collapse: collapse !important;

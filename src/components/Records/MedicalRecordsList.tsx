@@ -99,17 +99,47 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
 
   const fetchBatchRecords = async () => {
     try {
-      const res = await fetch('/api/ho-so-y-ba/batch-print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedRecordIds })
-      });
-      const data = await res.json();
-      if (data.success) return data.data;
-      return [];
+      let apiRecords: HoSoKham[] = [];
+      try {
+        const res = await fetch('/api/batch-print', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedRecordIds })
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          apiRecords = data.data;
+        }
+      } catch (apiErr) {
+        console.warn('Backend batch-print API call warning, will merge with local database:', apiErr);
+      }
+
+      const recordsMap = new Map<number, HoSoKham>();
+      for (const item of apiRecords) {
+        if (item && item.id) recordsMap.set(item.id, item);
+      }
+
+      const fullList: HoSoKham[] = [];
+      for (const id of selectedRecordIds) {
+        const fromApi = recordsMap.get(id);
+        if (fromApi && fromApi.chi_tiet && fromApi.chi_tiet.length > 0) {
+          fullList.push(fromApi);
+        } else {
+          const localRecord = sqliteService.getHoSoKhamById(id);
+          if (localRecord) {
+            fullList.push(localRecord);
+          } else if (fromApi) {
+            fullList.push(fromApi);
+          }
+        }
+      }
+
+      return fullList;
     } catch (e) {
-      console.error(e);
-      return [];
+      console.error('Lỗi khi tải chi tiết hồ sơ in hàng loạt:', e);
+      return selectedRecordIds
+        .map(id => sqliteService.getHoSoKhamById(id))
+        .filter(Boolean) as HoSoKham[];
     }
   };
 
@@ -137,16 +167,22 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
       if (fullRecords && fullRecords.length > 0) {
         onBatchPrint(fullRecords);
         setTimeout(() => {
-          window.print();
           setIsBatchProcessing(false);
-          onBatchPrint([]);
-        }, 1000);
+          const handleAfterPrint = () => {
+            window.removeEventListener('afterprint', handleAfterPrint);
+            onBatchPrint([]);
+          };
+          window.addEventListener('afterprint', handleAfterPrint);
+          window.print();
+        }, 500);
       } else {
         setIsBatchProcessing(false);
+        setFeedback({ type: 'error', text: 'Không tìm thấy dữ liệu chi tiết của các hồ sơ đã chọn!' });
       }
     } catch (err) {
-      console.error(err);
+      console.error('Lỗi khi in hàng loạt:', err);
       setIsBatchProcessing(false);
+      setFeedback({ type: 'error', text: 'Đã xảy ra lỗi khi chuẩn bị dữ liệu in hàng loạt!' });
     }
   };
 

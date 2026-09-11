@@ -459,16 +459,23 @@ app.post('/api/upload-dump', (req, res) => {
   }
 });
 
-// API for Batch Print Medical Records
-app.post('/api/ho-so-y-ba/batch-print', (req, res) => {
-  const { ids } = req.body;
-  if (!ids || !Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ success: false, error: 'No IDs provided' });
-  }
-
+// API for Batch Print Medical Records (Supports both /api/batch-print and /api/ho-so-y-ba/batch-print)
+const handleBatchPrintRequest = (req: express.Request, res: express.Response) => {
   try {
-    const placeholders = ids.map(() => '?').join(',');
-    const query = `
+    // Parse input IDs: supports { ids: [...] }, { recordIds: [...] }, { selectedRecordIds: [...] }, or [...]
+    const rawIds = Array.isArray(req.body)
+      ? req.body
+      : (req.body?.ids || req.body?.recordIds || req.body?.selectedRecordIds || req.body?.idList || []);
+
+    const idList: number[] = (Array.isArray(rawIds) ? rawIds : [rawIds])
+      .map((item: any) => typeof item === 'object' && item !== null ? Number(item.id) : Number(item))
+      .filter((n: number) => !isNaN(n) && n > 0);
+
+    if (idList.length === 0) {
+      return res.status(400).json({ success: false, error: 'Danh sách ID không hợp lệ hoặc rỗng', data: [] });
+    }
+
+    const getRecordStmt = db.prepare(`
       SELECT 
         hs.*,
         ns.ho_ten as ten_nhan_su,
@@ -494,12 +501,10 @@ app.post('/api/ho-so-y-ba/batch-print', (req, res) => {
       LEFT JOIN don_vi_cap_1 dv1_bs ON cq_bs.id_don_vi_cap_1 = dv1_bs.id
       LEFT JOIN don_vi_cap_1 dv1_bs_direct ON bs.id_don_vi_cap_1 = dv1_bs_direct.id
       LEFT JOIN mau_benh mb ON hs.id_mau_benh = mb.id
-      WHERE hs.id IN (${placeholders})
-    `;
-    
-    const records = db.prepare(query).all(...ids);
-    
-    const detailsQuery = `
+      WHERE hs.id = ?
+    `);
+
+    const getChiTietStmt = db.prepare(`
       SELECT 
         ct.*,
         t.ten as ten_thuoc, t.don_vi_tinh as dvt_thuoc, t.don_gia as dg_thuoc,
@@ -509,64 +514,72 @@ app.post('/api/ho-so-y-ba/batch-print', (req, res) => {
       LEFT JOIN thuoc t ON ct.id_muc = t.id AND ct.loai_muc = 'thuoc'
       LEFT JOIN vat_tu v ON ct.id_muc = v.id AND ct.loai_muc = 'vat_tu'
       LEFT JOIN dich_vu_kt d ON ct.id_muc = d.id AND ct.loai_muc IN ('dich_vu_kt', 'dich_vu', 'dich_vu_ky_thuat')
-      WHERE ct.id_ho_so IN (${placeholders})
-    `;
-    
-    const allDetails = db.prepare(detailsQuery).all(...ids);
-    const detailsByHoSo: Record<number, any[]> = {};
-    
-    for (const detail of allDetails as any[]) {
-      if (!detailsByHoSo[detail.id_ho_so]) {
-         detailsByHoSo[detail.id_ho_so] = [];
+      WHERE ct.id_ho_so = ?
+      ORDER BY ct.id ASC
+    `);
+
+    // Vòng lặp duyệt qua TỪNG ID trong mảng và lấy đầy đủ thông tin chi tiết
+    const fullRecords: any[] = [];
+    for (const id of idList) {
+      const rec = getRecordStmt.get(id) as any;
+      if (!rec) {
+        continue;
       }
-      
-      const loai = detail.loai_muc;
-      let ten_muc = detail.ten_muc;
-      if (!ten_muc || String(ten_muc).startsWith('Mục #') || /^\d+$/.test(String(ten_muc).trim())) {
+
+      // Lấy danh sách thuốc, vật tư, dịch vụ của từng hồ sơ
+      const details = getChiTietStmt.all(id) as any[];
+      const processedDetails = details.map((detail) => {
+        const loai = detail.loai_muc;
+        let ten_muc = detail.ten_muc;
+        if (!ten_muc || String(ten_muc).startsWith('Mục #') || /^\d+$/.test(String(ten_muc).trim())) {
           if (loai === 'thuoc') ten_muc = detail.ten_thuoc;
           else if (loai === 'vat_tu') ten_muc = detail.ten_vat_tu;
           else ten_muc = detail.ten_dich_vu;
-      }
-      
-      let don_vi_tinh = detail.don_vi_tinh;
-      if (!don_vi_tinh || don_vi_tinh === 'Lượt') {
+        }
+
+        let don_vi_tinh = detail.don_vi_tinh;
+        if (!don_vi_tinh || don_vi_tinh === 'Lượt') {
           if (loai === 'thuoc') don_vi_tinh = detail.dvt_thuoc;
           else if (loai === 'vat_tu') don_vi_tinh = detail.dvt_vat_tu;
           else don_vi_tinh = detail.dvt_dich_vu;
-      }
-      
-      let don_gia = detail.don_gia;
-      if (!don_gia || don_gia <= 0) {
+        }
+
+        let don_gia = detail.don_gia;
+        if (!don_gia || don_gia <= 0) {
           if (loai === 'thuoc') don_gia = detail.dg_thuoc;
           else if (loai === 'vat_tu') don_gia = detail.dg_vat_tu;
           else don_gia = detail.dg_dich_vu;
-      }
-      
-      const so_luong = detail.so_luong || 1;
-      const thanh_tien = detail.thanh_tien || (so_luong * don_gia);
-      
-      detailsByHoSo[detail.id_ho_so].push({
-         ...detail,
-         ten_muc: ten_muc || `Mục #${detail.id_muc}`,
-         don_vi_tinh: don_vi_tinh || 'Lượt',
-         don_gia: don_gia || 0,
-         thanh_tien: thanh_tien || 0
+        }
+
+        const so_luong = detail.so_luong || 1;
+        const thanh_tien = detail.thanh_tien || (so_luong * (don_gia || 0));
+
+        return {
+          ...detail,
+          ten_muc: ten_muc || `Mục #${detail.id_muc}`,
+          don_vi_tinh: don_vi_tinh || 'Lượt',
+          don_gia: don_gia || 0,
+          thanh_tien: thanh_tien || 0
+        };
       });
-    }
 
-    for (const rec of records as any[]) {
-      rec.chi_tiet = detailsByHoSo[rec.id] || [];
+      rec.chi_tiet = processedDetails;
       if (!rec.tong_chi_phi || rec.tong_chi_phi === 0) {
-         rec.tong_chi_phi = rec.chi_tiet.reduce((sum: number, item: any) => sum + item.thanh_tien, 0);
+        rec.tong_chi_phi = processedDetails.reduce((sum: number, item: any) => sum + (item.thanh_tien || 0), 0);
       }
+
+      fullRecords.push(rec);
     }
 
-    res.json({ success: true, data: records });
+    return res.json({ success: true, data: fullRecords, total: fullRecords.length });
   } catch (err: any) {
-    console.error('Batch print error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Batch print query error:', err);
+    return res.status(500).json({ success: false, error: err.message, data: [] });
   }
-});
+};
+
+app.post('/api/batch-print', handleBatchPrintRequest);
+app.post('/api/ho-so-y-ba/batch-print', handleBatchPrintRequest);
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
