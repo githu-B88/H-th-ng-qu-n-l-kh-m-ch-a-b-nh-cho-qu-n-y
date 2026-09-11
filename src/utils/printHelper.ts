@@ -185,6 +185,22 @@ export const printElement = (
           .leading-\\[1\\.35\\] { line-height: 1.35; }
           .tracking-wide { letter-spacing: 0.025em; }
           .tracking-wider { letter-spacing: 0.05em; }
+          .page-break-container {
+            page-break-after: always !important;
+            break-after: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+          }
+          .page-break-container:last-child {
+            page-break-after: auto !important;
+            break-after: auto !important;
+          }
         </style>
       </head>
       <body>

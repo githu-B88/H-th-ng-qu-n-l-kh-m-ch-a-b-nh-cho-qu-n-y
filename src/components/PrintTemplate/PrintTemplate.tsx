@@ -9,9 +9,10 @@ export { docTienBangChu };
 interface PrintTemplateProps {
   record?: HoSoKham;
   data?: HoSoKham;
+  className?: string;
 }
 
-export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record: propRecord, data: propData }) => {
+export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record: propRecord, data: propData, className }) => {
   const record = propRecord || propData;
   if (!record) return null;
   // Format date helper: YYYY-MM-DD -> DD/MM/YYYY
@@ -83,7 +84,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ record: propRecord
 
   return (
     <div
-      className="single-print-template bg-white text-black font-serif text-[12pt] leading-[1.3] p-0 m-0 w-full"
+      className={`hidden print:block bg-white text-black font-serif text-[12pt] leading-[1.3] p-0 m-0 w-full ${className || ''}`}
       style={{
         fontFamily: "'Times New Roman', Times, serif",
         boxSizing: 'border-box'

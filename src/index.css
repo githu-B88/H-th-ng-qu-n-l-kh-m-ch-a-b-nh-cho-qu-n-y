@@ -2,7 +2,7 @@
 
 @layer utilities {
   @media print {
-    /* Hide everything on page except #print-area */
+    /* Hide everything on page except .print-wrapper */
     body {
       background: #fff !important;
       color: #000 !important;
@@ -14,12 +14,12 @@
       visibility: hidden !important;
     }
 
-    #print-area,
-    #print-area * {
+    .print-wrapper,
+    .print-wrapper * {
       visibility: visible !important;
     }
 
-    #print-area {
+    .print-wrapper {
       position: absolute !important;
       left: 0 !important;
       top: 0 !important;

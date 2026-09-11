@@ -232,10 +232,8 @@ export default function App() {
       </div>
       {/* Print Template (Hidden on screen, 100% visible on print for A4) */}
       {printRecord && (
-        <div id="print-area" className="hidden print:block w-full">
-          <div className="page-break-container">
-            <PrintTemplate record={printRecord} />
-          </div>
+        <div className="print-wrapper">
+          <PrintTemplate record={printRecord} />
         </div>
       )}
       

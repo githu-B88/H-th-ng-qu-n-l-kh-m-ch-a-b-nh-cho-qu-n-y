@@ -99,47 +99,17 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
 
   const fetchBatchRecords = async () => {
     try {
-      let apiRecords: HoSoKham[] = [];
-      try {
-        const res = await fetch('/api/batch-print', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: selectedRecordIds })
-        });
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          apiRecords = data.data;
-        }
-      } catch (apiErr) {
-        console.warn('Backend batch-print API call warning, will merge with local database:', apiErr);
-      }
-
-      const recordsMap = new Map<number, HoSoKham>();
-      for (const item of apiRecords) {
-        if (item && item.id) recordsMap.set(item.id, item);
-      }
-
       const fullList: HoSoKham[] = [];
       for (const id of selectedRecordIds) {
-        const fromApi = recordsMap.get(id);
-        if (fromApi && fromApi.chi_tiet && fromApi.chi_tiet.length > 0) {
-          fullList.push(fromApi);
-        } else {
-          const localRecord = sqliteService.getHoSoKhamById(id);
-          if (localRecord) {
-            fullList.push(localRecord);
-          } else if (fromApi) {
-            fullList.push(fromApi);
-          }
+        const localRecord = sqliteService.getHoSoKhamById(id);
+        if (localRecord) {
+          fullList.push(localRecord as HoSoKham);
         }
       }
-
       return fullList;
     } catch (e) {
       console.error('Lỗi khi tải chi tiết hồ sơ in hàng loạt:', e);
-      return selectedRecordIds
-        .map(id => sqliteService.getHoSoKhamById(id))
-        .filter(Boolean) as HoSoKham[];
+      return [];
     }
   };
 
@@ -166,14 +136,19 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
       const fullRecords = await fetchBatchRecords();
       if (fullRecords && fullRecords.length > 0) {
         onBatchPrint(fullRecords);
+        // Đợi component render DOM xong rồi gọi printElement
         setTimeout(() => {
-          setIsBatchProcessing(false);
-          const handleAfterPrint = () => {
-            window.removeEventListener('afterprint', handleAfterPrint);
-            onBatchPrint([]);
-          };
-          window.addEventListener('afterprint', handleAfterPrint);
-          window.print();
+          import('../../utils/printHelper').then(({ printElement }) => {
+            printElement('printable-batch-sheet', {
+              title: `Bang_Ke_KCB_Hang_Loat`,
+              orientation: 'landscape',
+            });
+            setIsBatchProcessing(false);
+            // Có thể giữ hoặc xoá onBatchPrint([]) tùy logic, 
+            // nhưng thường printElement sẽ mở dialog in chặn trình duyệt,
+            // sau khi xong (khoảng 1s) ta clear data để đóng chế độ in nền.
+            setTimeout(() => onBatchPrint([]), 1500);
+          });
         }, 500);
       } else {
         setIsBatchProcessing(false);

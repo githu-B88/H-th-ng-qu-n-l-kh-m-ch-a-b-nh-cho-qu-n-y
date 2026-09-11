@@ -16,11 +16,9 @@ export const BatchPrintTemplate: React.FC<BatchPrintTemplateProps> = ({ records,
   if (items.length === 0) return null;
 
   return (
-    <div id="print-area" className="hidden print:block w-full">
+    <div id="printable-batch-sheet" className="w-full hidden print:block">
       {items.map((item) => (
-        <div key={item.id} className="page-break-container">
-          <SinglePrintTemplate record={item} data={item} />
-        </div>
+        <SinglePrintTemplate key={item.id} record={item} data={item} className="page-break-container" />
       ))}
     </div>
   );
