@@ -37,7 +37,7 @@ if (!fs.existsSync(dataDir)) {
 const dbPath = path.join(dataDir, 'phongkham_data.sqlite');
 
 // Khởi tạo kết nối SQLite
-const db = new Database(dbPath);
+let db = new Database(dbPath);
 
 // 2. Khóa Logic Khởi Tạo & Seed Dữ Liệu
 const initDatabase = () => {
@@ -428,9 +428,30 @@ app.get('/api/db-download', (req, res) => {
   res.sendFile(dbPath);
 });
 
+// API Endpoint để Frontend đẩy nguyên file SQLite (Đồng bộ Full)
+app.post('/api/db-upload', express.raw({ type: 'application/octet-stream', limit: '100mb' }), (req, res) => {
+  try {
+    if (!req.body || !Buffer.isBuffer(req.body)) {
+      return res.status(400).json({ success: false, error: 'No binary data provided' });
+    }
+    // Ghi đè file db
+    fs.writeFileSync(dbPath, req.body);
+    
+    // Khởi động lại kết nối DB
+    try { db.close(); } catch (e) {}
+    db = new Database(dbPath);
+    db.pragma('foreign_keys = ON');
+
+    res.json({ success: true, message: 'Database synced successfully' });
+  } catch (error: any) {
+    console.error('DB Upload Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // API Endpoint để thực thi SQL từ Frontend
 app.post('/api/query', (req, res) => {
-  const { sql, params } = req.body;
+  const { sql, params } = req.body; console.log('API QUERY:', sql, params);
   try {
     const isSelect = sql.trim().toUpperCase().startsWith('SELECT');
     if (isSelect) {

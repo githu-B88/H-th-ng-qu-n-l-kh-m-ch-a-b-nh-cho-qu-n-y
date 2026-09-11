@@ -98,9 +98,23 @@ class SqliteService {
 
   // Save database binary to IndexedDB with queueing / mutex without blocking localStorage conversion
   public async persistDatabase(): Promise<void> {
-    // No longer persisting to IndexedDB locally.
-    // Writes are synced directly to backend via monkey-patched db.run()
-    return;
+    try {
+      const data = this.exportSQLiteBinary();
+      if (!data) return;
+      
+      const res = await fetch('/api/db-upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream'
+        },
+        body: data
+      });
+      if (!res.ok) {
+        console.error('Failed to sync full database to backend');
+      }
+    } catch (e) {
+      console.error('Error syncing database:', e);
+    }
   }
 
   private async openIndexedDB(): Promise<IDBDatabase> {
@@ -294,19 +308,11 @@ class SqliteService {
         }
       }
 
-      // Monkey patch this.db.run to auto-sync to backend
+      // No longer using fetch('/api/query') monkey patch.
+      // Sync relies on persistDatabase() which uploads the binary to /api/db-upload
       const originalRun = this.db.run.bind(this.db);
       this.db.run = (sql: string, params?: any[]) => {
-          const result = originalRun(sql, params);
-          // Sync to backend (fire and forget)
-          if (!sql.toUpperCase().includes('PRAGMA ')) {
-             fetch('/api/query', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sql, params: params || [] })
-             }).catch(e => console.error("Sync error:", e));
-          }
-          return result;
+          return originalRun(sql, params);
       };
 
       // MIGRATION: Bổ sung cột id_don_vi_cap_1 cho bac_si và can_bo nếu chưa có
