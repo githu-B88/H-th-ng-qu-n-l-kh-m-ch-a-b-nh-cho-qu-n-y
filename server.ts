@@ -459,6 +459,115 @@ app.post('/api/upload-dump', (req, res) => {
   }
 });
 
+// API for Batch Print Medical Records
+app.post('/api/ho-so-y-ba/batch-print', (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ success: false, error: 'No IDs provided' });
+  }
+
+  try {
+    const placeholders = ids.map(() => '?').join(',');
+    const query = `
+      SELECT 
+        hs.*,
+        ns.ho_ten as ten_nhan_su,
+        COALESCE(ns.ma_the_bhyt, '') as ma_the_bhyt,
+        ns.ngay_sinh as ngay_sinh_nhan_su,
+        ns.gioi_tinh as gioi_tinh_nhan_su,
+        ns.cap_bac as cap_bac_nhan_su,
+        ns.chuc_vu as chuc_vu_nhan_su,
+        cq.ten as ten_don_vi_nhan_su,
+        cq.ten as ten_don_vi_cap_2,
+        COALESCE(ns.id_don_vi_cap_1, cq.id_don_vi_cap_1) as id_don_vi_cap_1,
+        COALESCE(dv1_ns_direct.ten, dv1.ten) as ten_don_vi_cap_1,
+        bs.ho_ten as ten_bac_si,
+        COALESCE(dv1_bs_direct.ten, dv1_bs.ten) as ten_don_vi_cap_1_bac_si,
+        mb.ten_benh as ten_mau_benh
+      FROM ho_so_kham hs
+      LEFT JOIN can_bo ns ON hs.id_nhan_su = ns.id
+      LEFT JOIN don_vi_cap_2 cq ON ns.id_don_vi_cap_2 = cq.id
+      LEFT JOIN don_vi_cap_1 dv1 ON cq.id_don_vi_cap_1 = dv1.id
+      LEFT JOIN don_vi_cap_1 dv1_ns_direct ON ns.id_don_vi_cap_1 = dv1_ns_direct.id
+      LEFT JOIN bac_si bs ON hs.id_bac_si = bs.id
+      LEFT JOIN don_vi_cap_2 cq_bs ON bs.id_don_vi = cq_bs.id
+      LEFT JOIN don_vi_cap_1 dv1_bs ON cq_bs.id_don_vi_cap_1 = dv1_bs.id
+      LEFT JOIN don_vi_cap_1 dv1_bs_direct ON bs.id_don_vi_cap_1 = dv1_bs_direct.id
+      LEFT JOIN mau_benh mb ON hs.id_mau_benh = mb.id
+      WHERE hs.id IN (${placeholders})
+    `;
+    
+    const records = db.prepare(query).all(...ids);
+    
+    const detailsQuery = `
+      SELECT 
+        ct.*,
+        t.ten as ten_thuoc, t.don_vi_tinh as dvt_thuoc, t.don_gia as dg_thuoc,
+        v.ten as ten_vat_tu, v.don_vi_tinh as dvt_vat_tu, v.don_gia as dg_vat_tu,
+        d.ten as ten_dich_vu, d.don_vi_tinh as dvt_dich_vu, d.don_gia as dg_dich_vu
+      FROM ho_so_kham_chi_tiet ct
+      LEFT JOIN thuoc t ON ct.id_muc = t.id AND ct.loai_muc = 'thuoc'
+      LEFT JOIN vat_tu v ON ct.id_muc = v.id AND ct.loai_muc = 'vat_tu'
+      LEFT JOIN dich_vu_kt d ON ct.id_muc = d.id AND ct.loai_muc IN ('dich_vu_kt', 'dich_vu', 'dich_vu_ky_thuat')
+      WHERE ct.id_ho_so IN (${placeholders})
+    `;
+    
+    const allDetails = db.prepare(detailsQuery).all(...ids);
+    const detailsByHoSo: Record<number, any[]> = {};
+    
+    for (const detail of allDetails as any[]) {
+      if (!detailsByHoSo[detail.id_ho_so]) {
+         detailsByHoSo[detail.id_ho_so] = [];
+      }
+      
+      const loai = detail.loai_muc;
+      let ten_muc = detail.ten_muc;
+      if (!ten_muc || String(ten_muc).startsWith('Mục #') || /^\d+$/.test(String(ten_muc).trim())) {
+          if (loai === 'thuoc') ten_muc = detail.ten_thuoc;
+          else if (loai === 'vat_tu') ten_muc = detail.ten_vat_tu;
+          else ten_muc = detail.ten_dich_vu;
+      }
+      
+      let don_vi_tinh = detail.don_vi_tinh;
+      if (!don_vi_tinh || don_vi_tinh === 'Lượt') {
+          if (loai === 'thuoc') don_vi_tinh = detail.dvt_thuoc;
+          else if (loai === 'vat_tu') don_vi_tinh = detail.dvt_vat_tu;
+          else don_vi_tinh = detail.dvt_dich_vu;
+      }
+      
+      let don_gia = detail.don_gia;
+      if (!don_gia || don_gia <= 0) {
+          if (loai === 'thuoc') don_gia = detail.dg_thuoc;
+          else if (loai === 'vat_tu') don_gia = detail.dg_vat_tu;
+          else don_gia = detail.dg_dich_vu;
+      }
+      
+      const so_luong = detail.so_luong || 1;
+      const thanh_tien = detail.thanh_tien || (so_luong * don_gia);
+      
+      detailsByHoSo[detail.id_ho_so].push({
+         ...detail,
+         ten_muc: ten_muc || `Mục #${detail.id_muc}`,
+         don_vi_tinh: don_vi_tinh || 'Lượt',
+         don_gia: don_gia || 0,
+         thanh_tien: thanh_tien || 0
+      });
+    }
+
+    for (const rec of records as any[]) {
+      rec.chi_tiet = detailsByHoSo[rec.id] || [];
+      if (!rec.tong_chi_phi || rec.tong_chi_phi === 0) {
+         rec.tong_chi_phi = rec.chi_tiet.reduce((sum: number, item: any) => sum + item.thanh_tien, 0);
+      }
+    }
+
+    res.json({ success: true, data: records });
+  } catch (err: any) {
+    console.error('Batch print error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

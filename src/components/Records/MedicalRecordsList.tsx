@@ -24,11 +24,13 @@ import { Modal } from '../common/Modal';
 
 interface MedicalRecordsListProps {
   onPrintRecord: (record: HoSoKham) => void;
+  onBatchPrint?: (records: HoSoKham[]) => void;
   onNewExam: () => void;
 }
 
 export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
   onPrintRecord,
+  onBatchPrint,
   onNewExam
 }) => {
   const [records, setRecords] = useState<HoSoKham[]>([]);
@@ -75,7 +77,78 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
     return unsub;
   }, [search, selectedDonViCap1, selectedDonViCap2, tuNgay, denNgay, trangThai]);
 
+  const [selectedRecordIds, setSelectedRecordIds] = useState<number[]>([]);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [exportingId, setExportingId] = useState<number | null>(null);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedRecordIds(records.map(r => r.id));
+    } else {
+      setSelectedRecordIds([]);
+    }
+  };
+
+  const handleSelectRecord = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedRecordIds(prev => [...prev, id]);
+    } else {
+      setSelectedRecordIds(prev => prev.filter(rId => rId !== id));
+    }
+  };
+
+  const fetchBatchRecords = async () => {
+    try {
+      const res = await fetch('/api/ho-so-y-ba/batch-print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedRecordIds })
+      });
+      const data = await res.json();
+      if (data.success) return data.data;
+      return [];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  };
+
+  const handleBatchExportWord = async () => {
+    if (selectedRecordIds.length === 0) return;
+    setIsBatchProcessing(true);
+    try {
+      const fullRecords = await fetchBatchRecords();
+      if (fullRecords && fullRecords.length > 0) {
+        await exportBangKeToDocx(fullRecords);
+      }
+    } catch (err) {
+      console.error(err);
+      setFeedback({ type: 'error', text: 'Lỗi khi xuất Word hàng loạt!' });
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
+
+  const handleBatchPrint = async () => {
+    if (selectedRecordIds.length === 0 || !onBatchPrint) return;
+    setIsBatchProcessing(true);
+    try {
+      const fullRecords = await fetchBatchRecords();
+      if (fullRecords && fullRecords.length > 0) {
+        onBatchPrint(fullRecords);
+        setTimeout(() => {
+          window.print();
+          setIsBatchProcessing(false);
+          onBatchPrint([]);
+        }, 1000);
+      } else {
+        setIsBatchProcessing(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsBatchProcessing(false);
+    }
+  };
 
   const handleExportWord = async (recordOrId: HoSoKham | number, e?: React.MouseEvent) => {
     if (e) {
@@ -225,7 +298,32 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
             </h3>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {selectedRecordIds.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleBatchPrint}
+                  disabled={isBatchProcessing}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
+                  title="In hàng loạt các hồ sơ đã chọn"
+                >
+                  {isBatchProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+                  <span>In hàng loạt ({selectedRecordIds.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBatchExportWord}
+                  disabled={isBatchProcessing}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
+                  title="Xuất Word (.docx) hàng loạt các hồ sơ đã chọn"
+                >
+                  {isBatchProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                  <span>Xuất Word ({selectedRecordIds.length})</span>
+                </button>
+              </>
+            )}
+
             {records.length > 0 && (
               <button
                 type="button"
@@ -326,6 +424,14 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                <th className="py-3 px-4 font-semibold w-10 text-center">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    checked={records.length > 0 && selectedRecordIds.length === records.length}
+                    onChange={handleSelectAll}
+                  />
+                </th>
                 <th className="py-3 px-4 font-semibold">Mã Hồ Sơ</th>
                 <th className="py-3 px-4 font-semibold">Ngày Khám</th>
                 <th className="py-3 px-4 font-semibold">Cán Bộ / Bệnh Nhân</th>
@@ -341,6 +447,14 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
               {records.length > 0 ? (
                 records.map((r) => (
                   <tr key={r.id} className="hover:bg-sky-50/50 transition-colors">
+                    <td className="py-3 px-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                        checked={selectedRecordIds.includes(r.id)}
+                        onChange={(e) => handleSelectRecord(r.id, e.target.checked)}
+                      />
+                    </td>
                     <td className="py-3 px-4 font-mono font-bold text-sky-700">
                       {r.ma_ho_so}
                     </td>
@@ -447,7 +561,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-slate-500">
+                  <td colSpan={10} className="p-12 text-center text-slate-500">
                     <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-3">
                       <div className="p-3 bg-slate-100 rounded-full text-slate-400">
                         <FileText className="w-8 h-8" />

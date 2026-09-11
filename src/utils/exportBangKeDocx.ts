@@ -78,7 +78,7 @@ const noBorder = {
   insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
 };
 
-export async function exportBangKeToDocx(record: HoSoKham) {
+function buildRecordSection(record: HoSoKham): any {
   // Treatment date range (5 days) & footer date parts from ngay_kham
   const { tuNgay, denNgay, day, month, year } = getTreatmentDateRange(record.ngay_kham);
 
@@ -541,10 +541,7 @@ export async function exportBangKeToDocx(record: HoSoKham) {
     ],
   });
 
-  // Build the complete docx document
-  const doc = new Document({
-    sections: [
-      {
+  return {
         properties: {
           page: {
             size: {
@@ -713,15 +710,17 @@ export async function exportBangKeToDocx(record: HoSoKham) {
           // Phần 5: Chân trang (Footer Chữ ký - 60pt khoảng trống)
           signatureTable,
         ],
-      },
-    ],
-  });
+  };
+}
 
-  // Pack and trigger download
+export async function exportBangKeToDocx(recordOrRecords: HoSoKham | HoSoKham[]) {
+  const records = Array.isArray(recordOrRecords) ? recordOrRecords : [recordOrRecords];
+  const sections = records.map(record => buildRecordSection(record));
+  const doc = new Document({ sections });
   const blob = await Packer.toBlob(doc);
-  const tenCanBoFormatted = sanitizeFileName(record.ten_nhan_su || 'QuanNhan');
-  const ngayKhamFormatted = (record.ngay_kham || new Date().toISOString().split('T')[0]).replace(/-/g, '');
-  const fileName = `BangKe_${tenCanBoFormatted}_${ngayKhamFormatted}.docx`;
+  const fileName = records.length === 1 
+    ? `BangKe_${sanitizeFileName(records[0].ten_nhan_su || 'QuanNhan')}_${(records[0].ngay_kham || new Date().toISOString().split('T')[0]).replace(/-/g, '')}.docx`
+    : `BangKe_Hang_Loat_${records.length}_Ho_So.docx`;
 
   saveAs(blob, fileName);
 }

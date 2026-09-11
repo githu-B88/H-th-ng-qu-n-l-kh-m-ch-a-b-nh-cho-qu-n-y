@@ -160,7 +160,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
       loadMasterData();
     });
     return unsubscribe;
-  }, [activeDoctorId, currentDoctor?.id, (currentDoctor as any)?.id_don_vi_cap_1]);
+  }, [activeDoctorId, currentDoctor, bacSiList]);
 
   useEffect(() => {
     if (preSelectedPatientId) {

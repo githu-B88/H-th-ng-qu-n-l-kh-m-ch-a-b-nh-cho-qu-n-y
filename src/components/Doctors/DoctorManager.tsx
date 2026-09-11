@@ -49,8 +49,11 @@ export const DoctorManager: React.FC = () => {
   };
 
   const handleOpenEdit = (bs: BacSi) => {
-    let cq = donViCap2List.find(d => d.id === bs.id_don_vi);
-    const id_don_vi_cap_1 = cq ? cq.id_don_vi_cap_1 : undefined;
+    let id_don_vi_cap_1 = (bs as any).id_don_vi_cap_1;
+    if (!id_don_vi_cap_1) {
+      let cq = donViCap2List.find(d => d.id === bs.id_don_vi);
+      id_don_vi_cap_1 = cq ? cq.id_don_vi_cap_1 : undefined;
+    }
     setEditingDoctor({ ...bs, id_don_vi_cap_1 });
     setIsModalOpen(true);
   };

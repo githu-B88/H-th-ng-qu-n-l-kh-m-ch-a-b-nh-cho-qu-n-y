@@ -2349,18 +2349,20 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         ns.chuc_vu as chuc_vu_nhan_su,
         cq.ten as ten_don_vi_nhan_su,
         cq.ten as ten_don_vi_cap_2,
-        dv1.id as id_don_vi_cap_1,
-        dv1.ten as ten_don_vi_cap_1,
+        COALESCE(ns.id_don_vi_cap_1, cq.id_don_vi_cap_1) as id_don_vi_cap_1,
+        COALESCE(dv1_ns_direct.ten, dv1.ten) as ten_don_vi_cap_1,
         bs.ho_ten as ten_bac_si,
-        dv1_bs.ten as ten_don_vi_cap_1_bac_si,
+        COALESCE(dv1_bs_direct.ten, dv1_bs.ten) as ten_don_vi_cap_1_bac_si,
         mb.ten_benh as ten_mau_benh
       FROM ho_so_kham hs
       LEFT JOIN can_bo ns ON hs.id_nhan_su = ns.id
       LEFT JOIN don_vi_cap_2 cq ON ns.id_don_vi_cap_2 = cq.id
       LEFT JOIN don_vi_cap_1 dv1 ON cq.id_don_vi_cap_1 = dv1.id
+      LEFT JOIN don_vi_cap_1 dv1_ns_direct ON ns.id_don_vi_cap_1 = dv1_ns_direct.id
       LEFT JOIN bac_si bs ON hs.id_bac_si = bs.id
       LEFT JOIN don_vi_cap_2 cq_bs ON bs.id_don_vi = cq_bs.id
       LEFT JOIN don_vi_cap_1 dv1_bs ON cq_bs.id_don_vi_cap_1 = dv1_bs.id
+      LEFT JOIN don_vi_cap_1 dv1_bs_direct ON bs.id_don_vi_cap_1 = dv1_bs_direct.id
       LEFT JOIN mau_benh mb ON hs.id_mau_benh = mb.id
       WHERE hs.id = ?`,
       [id]

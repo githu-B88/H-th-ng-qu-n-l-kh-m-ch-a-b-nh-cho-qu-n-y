@@ -35,6 +35,7 @@ export default function App() {
 
   // Cross-component triggers
   const [printRecord, setPrintRecord] = useState<HoSoKham | null>(null);
+  const [batchPrintRecords, setBatchPrintRecords] = useState<HoSoKham[]>([]);
   const [examPatientId, setExamPatientId] = useState<number | null>(null);
   const [historyPatientId, setHistoryPatientId] = useState<number | null>(null);
 
@@ -202,6 +203,7 @@ export default function App() {
           {(activeTab === 'ho_so_kham' || activeTab === 'ho_so_y_ba') && (
             <MedicalRecordsList
               onPrintRecord={handleOpenPrint}
+              onBatchPrint={(records) => setBatchPrintRecords(records)}
               onNewExam={() => {
                 setExamPatientId(null);
                 setActiveTab('kham_benh');
@@ -229,6 +231,17 @@ export default function App() {
       </div>
       {/* Print Template (Hidden on screen, 100% visible on print for A4) */}
       {printRecord && <PrintTemplate record={printRecord} />}
+      
+      {/* Batch Print Templates */}
+      {batchPrintRecords.length > 0 && (
+        <div className="hidden print:block w-full">
+          {batchPrintRecords.map((rec, index) => (
+            <div key={rec.id} style={{ pageBreakAfter: index === batchPrintRecords.length - 1 ? 'auto' : 'always' }}>
+              <PrintTemplate record={rec} />
+            </div>
+          ))}
+        </div>
+      )}
       
       {/* Printable Prescription Modal Preview */}
       {printRecord && (
