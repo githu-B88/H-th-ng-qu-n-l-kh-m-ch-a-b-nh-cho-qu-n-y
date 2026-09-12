@@ -6,9 +6,10 @@ export const printElement = (
   options: {
     title?: string;
     orientation?: 'landscape' | 'portrait';
+    hidePageNumber?: boolean;
   } = {}
 ) => {
-  const { title = 'In Bảng kê chi phí KCB Quân nhân', orientation = 'landscape' } = options;
+  const { title = 'In Bảng kê chi phí KCB Quân nhân', orientation = 'landscape', hidePageNumber = false } = options;
   const element = document.getElementById(elementId);
   
   if (!element) {
@@ -37,13 +38,15 @@ export const printElement = (
     return;
   }
 
+  const pageContent = hidePageNumber ? 'content: "";' : 'content: counter(page);';
+
   const pageRule =
     orientation === 'landscape'
       ? `@page {
           size: A4 landscape;
           margin: 13mm 15mm 0mm 25mm;
           @top-center {
-            content: counter(page);
+            ${pageContent}
             font-size: 11pt;
             font-family: "Times New Roman", serif;
           }
@@ -57,7 +60,7 @@ export const printElement = (
           size: A4 portrait;
           margin: 13mm 15mm 0mm 20mm;
           @top-center {
-            content: counter(page);
+            ${pageContent}
             font-size: 11pt;
             font-family: "Times New Roman", serif;
           }

@@ -142,6 +142,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
             printElement('printable-batch-sheet', {
               title: `Bang_Ke_KCB_Hang_Loat`,
               orientation: 'landscape',
+              hidePageNumber: true
             });
             setIsBatchProcessing(false);
             // Có thể giữ hoặc xoá onBatchPrint([]) tùy logic, 
