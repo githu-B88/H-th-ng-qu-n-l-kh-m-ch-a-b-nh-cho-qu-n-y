@@ -38,18 +38,18 @@ export const printElement = (
     return;
   }
 
-  const pageContent = hidePageNumber ? 'content: "";' : 'content: counter(page);';
-
   const pageRule =
     orientation === 'landscape'
       ? `@page {
           size: A4 landscape;
           margin: 13mm 15mm 0mm 25mm;
+          ${hidePageNumber ? '' : `
           @top-center {
-            ${pageContent}
+            content: counter(page);
             font-size: 11pt;
             font-family: "Times New Roman", serif;
           }
+          `}
         }
         @page :first {
           @top-center {
@@ -59,11 +59,13 @@ export const printElement = (
       : `@page {
           size: A4 portrait;
           margin: 13mm 15mm 0mm 20mm;
+          ${hidePageNumber ? '' : `
           @top-center {
-            ${pageContent}
+            content: counter(page);
             font-size: 11pt;
             font-family: "Times New Roman", serif;
           }
+          `}
         }
         @page :first {
           @top-center {
