@@ -857,16 +857,6 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
           [cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '', cq.id]
         );
       }
-
-      // 4. Đồng bộ lại Bác sĩ: BS 1 thuộc Phòng Tham mưu (Ban Tác chiến id 1)
-      this.db.run("UPDATE bac_si SET id_don_vi = 1 WHERE id = 1 AND (id_don_vi IS NULL OR id_don_vi = 15);");
-      // Bổ sung BS 4 và 5 nếu chưa có
-      for (const bs of SEED_BAC_SI) {
-        this.db.run(
-          "INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi, chuyen_mon, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          [bs.id, bs.ho_ten, bs.the_bhyt || null, bs.ngay_sinh || null, bs.gioi_tinh || 'Nam', bs.id_don_vi || null, bs.chuyen_mon || null, bs.ghi_chu || null]
-        );
-      }
     } catch (err) {
       console.warn('ensureDefaultDonVi error:', err);
     }

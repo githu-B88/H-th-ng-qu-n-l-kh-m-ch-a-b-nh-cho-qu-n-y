@@ -318,40 +318,49 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     `).run();
 
     // Khởi tạo các Đơn vị cấp 1 nếu chưa có
-    const insertCap1 = db.prepare(`
-      INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) 
-      VALUES (?, ?, ?)
-    `);
-    for (const cap1 of SEED_DON_VI_CAP_1) {
-      insertCap1.run(cap1.id, cap1.ten, cap1.ghi_chu || '');
+    const countCap1 = db.prepare('SELECT COUNT(*) as count FROM don_vi_cap_1').get() as { count: number };
+    if (countCap1.count === 0) {
+      const insertCap1 = db.prepare(`
+        INSERT OR IGNORE INTO don_vi_cap_1 (id, ten, ghi_chu) 
+        VALUES (?, ?, ?)
+      `);
+      for (const cap1 of SEED_DON_VI_CAP_1) {
+        insertCap1.run(cap1.id, cap1.ten, cap1.ghi_chu || '');
+      }
     }
 
     // Khởi tạo các Đơn vị cấp 2 trực thuộc nếu chưa có
-    const insertCap2 = db.prepare(`
-      INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) 
-      VALUES (?, ?, ?, ?)
-    `);
-    for (const cq of SEED_CO_QUAN) {
-      insertCap2.run(cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '');
+    const countCap2 = db.prepare('SELECT COUNT(*) as count FROM don_vi_cap_2').get() as { count: number };
+    if (countCap2.count === 0) {
+      const insertCap2 = db.prepare(`
+        INSERT OR IGNORE INTO don_vi_cap_2 (id, id_don_vi_cap_1, ten, ghi_chu) 
+        VALUES (?, ?, ?, ?)
+      `);
+      for (const cq of SEED_CO_QUAN) {
+        insertCap2.run(cq.id, cq.id_don_vi_cap_1 || 1, cq.ten, cq.ghi_chu || '');
+      }
     }
 
-    // Seed Bác sĩ: Dùng INSERT OR IGNORE để không ghi đè chỉnh sửa của người dùng
-    const insertBs = db.prepare(`
-      INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi_cap_1, id_don_vi, chuyen_mon, ghi_chu) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    for (const bs of SEED_BAC_SI) {
-      insertBs.run(
-        bs.id,
-        bs.ho_ten,
-        bs.the_bhyt || null,
-        bs.ngay_sinh || null,
-        bs.gioi_tinh || 'Nam',
-        (bs as any).id_don_vi_cap_1 || 1,
-        bs.id_don_vi || null,
-        bs.chuyen_mon || null,
-        bs.ghi_chu || null
-      );
+    // Seed Bác sĩ: Chỉ seed khi bảng chưa có dữ liệu (tránh khôi phục bác sĩ đã bị xoá)
+    const countBs = db.prepare('SELECT COUNT(*) as count FROM bac_si').get() as { count: number };
+    if (countBs.count === 0) {
+      const insertBs = db.prepare(`
+        INSERT OR IGNORE INTO bac_si (id, ho_ten, the_bhyt, ngay_sinh, gioi_tinh, id_don_vi_cap_1, id_don_vi, chuyen_mon, ghi_chu) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const bs of SEED_BAC_SI) {
+        insertBs.run(
+          bs.id,
+          bs.ho_ten,
+          bs.the_bhyt || null,
+          bs.ngay_sinh || null,
+          bs.gioi_tinh || 'Nam',
+          (bs as any).id_don_vi_cap_1 || 1,
+          bs.id_don_vi || null,
+          bs.chuyen_mon || null,
+          bs.ghi_chu || null
+        );
+      }
     }
   } catch (syncErr) {
     console.error("Error syncing organizational units in server:", syncErr);
