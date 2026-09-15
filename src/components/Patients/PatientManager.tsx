@@ -135,12 +135,13 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
   };
 
   const handleDeletePatient = (id: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa cán bộ này? Không thể khôi phục.')) {
-      if ((sqliteService as any).run("DELETE FROM can_bo WHERE id = ?", [id]).success) {
-        (sqliteService as any).notify();
+    if (window.confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa cán bộ này? Toàn bộ lịch sử khám bệnh của cán bộ này cũng sẽ bị xóa vĩnh viễn. Không thể khôi phục.')) {
+      const res = (sqliteService as any).deletePatient(id);
+      if (res.success) {
+        alert(res.message);
         loadData();
       } else {
-        alert('Không thể xóa cán bộ do có dữ liệu liên quan (Hồ sơ khám).');
+        alert(res.message);
       }
     }
   };
@@ -355,6 +356,23 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
             >
               <Plus className="w-4 h-4" />
               Thêm Mới
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('CẢNH BÁO NGUY HIỂM: Hành động này sẽ xóa TOÀN BỘ dữ liệu cán bộ và LỊCH SỬ KHÁM BỆNH của họ khỏi cơ sở dữ liệu SQLite.\n\nCác danh mục thuốc, vật tư, dịch vụ, đơn vị, mẫu bệnh và danh sách bác sỹ vẫn được giữ nguyên.\n\nBạn có chắc chắn muốn xóa toàn bộ cán bộ?')) {
+                  const res = (sqliteService as any).clearAllPatients?.() || { success: false, message: 'Chức năng chưa được cập nhật trong SQLite Service.' };
+                  if (res.success) {
+                    alert(res.message);
+                    loadData();
+                  } else {
+                    alert(res.message);
+                  }
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-semibold text-sm cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              Xóa tất cả
             </button>
           </div>
         </div>

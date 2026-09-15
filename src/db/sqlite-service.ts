@@ -3261,6 +3261,73 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
   }
 
+  public deletePatient(id: number): { success: boolean; message: string } {
+    if (!this.db) {
+      return { success: false, message: 'Cơ sở dữ liệu SQLite chưa sẵn sàng.' };
+    }
+
+    try {
+      this.db.run("BEGIN TRANSACTION;");
+      
+      // Delete details first
+      this.db.run("DELETE FROM ho_so_kham_chi_tiet WHERE id_ho_so IN (SELECT id FROM ho_so_kham WHERE id_nhan_su = ?);", [id]);
+      // Delete exam records
+      this.db.run("DELETE FROM ho_so_kham WHERE id_nhan_su = ?;", [id]);
+      // Delete the patient
+      this.db.run("DELETE FROM can_bo WHERE id = ?;", [id]);
+      
+      this.db.run("COMMIT;");
+
+      this.persistDatabase();
+      this.notify();
+
+      return { success: true, message: 'Đã xóa cán bộ và toàn bộ lịch sử khám bệnh liên quan.' };
+    } catch (err: any) {
+      try { this.db.run("ROLLBACK;"); } catch (e) {}
+      console.error('Lỗi khi xóa cán bộ:', err);
+      return { success: false, message: 'Lỗi khi xóa cán bộ: ' + (err.message || err) };
+    }
+  }
+
+  public clearAllPatients(): { success: boolean; message: string; deletedCount: number } {
+    if (!this.db) {
+      return { success: false, message: 'Cơ sở dữ liệu SQLite chưa sẵn sàng.', deletedCount: 0 };
+    }
+
+    try {
+      const countBefore = this.db.exec("SELECT COUNT(*) FROM can_bo");
+      const count = countBefore.length > 0 ? Number(countBefore[0].values[0][0]) : 0;
+
+      this.db.run("BEGIN TRANSACTION;");
+      
+      this.db.run("DELETE FROM ho_so_kham_chi_tiet;");
+      this.db.run("DELETE FROM ho_so_kham;");
+      this.db.run("DELETE FROM can_bo;");
+      this.db.run("DELETE FROM the_bhyt;");
+      
+      try {
+        this.db.run("DELETE FROM sqlite_sequence WHERE name IN ('ho_so_kham', 'ho_so_kham_chi_tiet', 'can_bo');");
+      } catch (seqErr) {
+        console.warn('sqlite_sequence reset note:', seqErr);
+      }
+      
+      this.db.run("COMMIT;");
+
+      this.persistDatabase();
+      this.notify();
+
+      return {
+        success: true,
+        message: `Đã xóa thành công toàn bộ dữ liệu cán bộ (${count} hồ sơ) và lịch sử khám!`,
+        deletedCount: count
+      };
+    } catch (e: any) {
+      try { this.db.run("ROLLBACK;"); } catch (err) {}
+      console.error('Clear all patients error:', e);
+      return { success: false, message: e.message || 'Lỗi khi xóa toàn bộ cán bộ.', deletedCount: 0 };
+    }
+  }
+
   /**
    * Chuẩn hóa và thiết lập cứng danh mục Đơn vị cấp 1 (CHỈ 6 ĐƠN VỊ CHUẨN)
    */

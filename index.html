@@ -3,6 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        try {
+          var desc = Object.getOwnPropertyDescriptor(window, 'fetch');
+          if (!desc && typeof Window !== 'undefined' && Window.prototype) {
+            desc = Object.getOwnPropertyDescriptor(Window.prototype, 'fetch');
+          }
+          if (desc && desc.get && !desc.set) {
+            var currentFetch = window.fetch;
+            try {
+              Object.defineProperty(window, 'fetch', {
+                get: function() { return currentFetch; },
+                set: function(fn) { currentFetch = fn; },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (err) {
+              try {
+                Object.defineProperty(Window.prototype, 'fetch', {
+                  get: function() { return currentFetch; },
+                  set: function(fn) { currentFetch = fn; },
+                  configurable: true,
+                  enumerable: true
+                });
+              } catch (e2) {}
+            }
+          }
+        } catch (e) {}
+
+        window.addEventListener('error', function(event) {
+          if (event && event.message && event.message.indexOf('fetch') !== -1 && event.message.indexOf('only a getter') !== -1) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        var prevOnError = window.onerror;
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+          if (typeof msg === 'string' && msg.indexOf('fetch') !== -1 && msg.indexOf('only a getter') !== -1) {
+            return true;
+          }
+          if (prevOnError) return prevOnError.apply(this, arguments);
+        };
+      })();
+    </script>
     <title>Hệ thống quản lý khám, chữa bệnh tại đơn vị quân y</title>
     <meta name="description" content="Hệ thống quản lý khám, chữa bệnh, y bạ và cấp phát thuốc tại đơn vị quân y chạy offline với SQLite cục bộ." />
     <meta property="og:title" content="Hệ thống quản lý khám, chữa bệnh tại đơn vị quân y" />
