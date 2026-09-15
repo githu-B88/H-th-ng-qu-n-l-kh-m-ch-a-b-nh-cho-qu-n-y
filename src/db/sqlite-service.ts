@@ -1163,11 +1163,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       // 3. Phòng Hậu cần-Kỹ thuật Vùng (hoặc Phòng Hậu cần-Kỹ thuật)
       const isThamMuu =
         idDonViCap1 === 1 ||
-        /tham\s*mưu|tham\s*muu/i.test(tenDonViCap1) ||
-        /tham\s*mưu|tham\s*muu/i.test(tenDonViCap2) ||
-        /tác\s*chiến|quan\s*lực|quân\s*lực|quân\s*huấn|thông\s*tin|trinh\s*sát|cơ\s*yếu|hành\s*chính/i.test(
-          tenDonViCap2
-        );
+        /tham\s*mưu|tham\s*muu/i.test(tenDonViCap1);
 
       if (isThamMuu) {
         // Lấy danh sách ID đơn vị cấp 1 của cả 3 phòng

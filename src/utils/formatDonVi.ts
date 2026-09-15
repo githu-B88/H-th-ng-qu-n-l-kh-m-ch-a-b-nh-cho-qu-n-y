@@ -69,8 +69,9 @@ export const isThamMuuDoctor = (doc: any): boolean => {
   if (!doc) return false;
   const cap1Id = Number(doc.id_don_vi_cap_1 || 0);
   if (cap1Id === 1) return true;
-  if (isThamMuuUnit(doc.ten_don_vi_cap_1)) return true;
-  if (isThamMuuUnit(doc.ten_don_vi)) return true;
+  // If id is not reliable, ensure ten_don_vi_cap_1 matches "Tham mưu" directly
+  const normCap1 = (doc.ten_don_vi_cap_1 || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (normCap1.includes('tham muu') || normCap1 === 'phong tm vung') return true;
   return false;
 };
 
