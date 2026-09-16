@@ -28,6 +28,14 @@ interface MedicalRecordsListProps {
   onNewExam: () => void;
 }
 
+const getDonViDisplay = (cap1?: string, cap2?: string) => {
+  const cap1Str = cap1 || 'Không rõ';
+  if (cap2 && cap2.trim() !== '' && cap2.trim().toLowerCase() !== 'cơ quan') {
+    return `${cap1Str} - ${cap2}`;
+  }
+  return cap1Str;
+};
+
 export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
   onPrintRecord,
   onBatchPrint,
@@ -476,21 +484,12 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
                     <td className="py-3 px-4">
                       <div className="font-bold text-slate-900">{r.ten_nhan_su}</div>
                       <div className="text-[11px] text-slate-500 font-mono">
-                        BHYT: {r.the_bhyt || 'Không'}
+                        {(r.ma_the_bhyt || r.the_bhyt) ? `BHYT: ${r.ma_the_bhyt || r.the_bhyt}` : 'Không BHYT'}
                       </div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-800">
-                        {r.ten_don_vi_cap_2 ? (
-                          <>
-                            <span>{r.ten_don_vi_cap_2}</span>
-                            {r.ten_don_vi_cap_1 && (
-                              <span className="text-slate-500 font-normal"> - {r.ten_don_vi_cap_1}</span>
-                            )}
-                          </>
-                        ) : (
-                          r.ten_don_vi_nhan_su || '---'
-                        )}
+                        {getDonViDisplay(r.ten_don_vi_cap_1, r.ten_don_vi_cap_2 || r.ten_don_vi_nhan_su)}
                       </div>
                       <div className="text-[11px] text-slate-500">
                         {[r.cap_bac_nhan_su, r.chuc_vu_nhan_su].filter(Boolean).join(' - ')}
@@ -651,14 +650,14 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
               <div>
                 <span className="text-slate-500">Đơn vị / Chức vụ:</span>
                 <div className="font-medium text-slate-800">
-                  {viewRecord.ten_don_vi_nhan_su || '---'} (
+                  {getDonViDisplay(viewRecord.ten_don_vi_cap_1, viewRecord.ten_don_vi_cap_2 || viewRecord.ten_don_vi_nhan_su)} (
                   {viewRecord.chuc_vu_nhan_su || viewRecord.cap_bac_nhan_su || 'Cán bộ'})
                 </div>
               </div>
               <div>
                 <span className="text-slate-500">Số BHYT:</span>
                 <div className="font-mono font-bold text-sky-700">
-                  {viewRecord.the_bhyt || 'Không'}
+                  {(viewRecord.ma_the_bhyt || viewRecord.the_bhyt) ? (viewRecord.ma_the_bhyt || viewRecord.the_bhyt) : 'Không BHYT'}
                 </div>
               </div>
             </div>

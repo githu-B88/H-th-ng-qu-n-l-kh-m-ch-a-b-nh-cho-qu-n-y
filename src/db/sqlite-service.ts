@@ -793,8 +793,8 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
   }
 
-  public run(sql: string, params: SqlValue[] = []): { success: boolean; lastInsertRowId?: number; changes?: number } {
-    if (!this.db) return { success: false };
+  public run(sql: string, params: SqlValue[] = []): { success: boolean; lastInsertRowId?: number; changes?: number; error?: string } {
+    if (!this.db) return { success: false, error: 'Database not initialized' };
     try {
       this.db.run(sql, params); // This will trigger the auto-sync via monkey patch
       
@@ -808,9 +808,9 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
 
       this.notify();
       return { success: true, lastInsertRowId, changes };
-    } catch (err) {
+    } catch (err: any) {
       console.error('SQL run error:', sql, err);
-      return { success: false };
+      return { success: false, error: err.message || 'Lỗi cơ sở dữ liệu' };
     }
   }
 
@@ -1061,14 +1061,28 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       if (remainingDocs.length === 0) {
         return { success: false, error: 'Phòng khám cần giữ lại tối thiểu 1 Bác sĩ / Y sĩ!' };
       }
-      const fallbackDocId = remainingDocs[0].id;
 
-      // Safe deletion with Foreign Key handling
+      // Correct Logic: Prevent deletion if doctor has existing medical records (historical integrity)
+      const checkRecords = this.query<{ count: number }>("SELECT COUNT(id) as count FROM ho_so_kham WHERE id_bac_si = ?", [id]);
+      if (checkRecords.length > 0 && checkRecords[0].count > 0) {
+        return { success: false, error: 'Không thể xóa bác sĩ đã có hồ sơ khám bệnh để bảo toàn dữ liệu lịch sử y tế. Nếu cần, hãy sửa thông tin thay vì xóa.' };
+      }
+
+      // Safe deletion with Foreign Key handling for nguoi_dung
       this.db.run("PRAGMA foreign_keys = OFF;");
-      this.run("UPDATE ho_so_kham SET id_bac_si = ? WHERE id_bac_si = ?", [fallbackDocId, id]);
-      this.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si = ?", [id]);
+      
+      const up2 = this.run("UPDATE nguoi_dung SET id_bac_si = NULL WHERE id_bac_si = ?", [id]);
+      if (!up2.success) {
+        this.db.run("PRAGMA foreign_keys = ON;");
+        return { success: false, error: 'Không thể cập nhật người dùng: ' + up2.error };
+      }
+
       const res = this.run("DELETE FROM bac_si WHERE id = ?", [id]);
       this.db.run("PRAGMA foreign_keys = ON;");
+
+      if (!res.success) {
+        return { success: false, error: res.error || 'Lỗi khi xóa Bác sĩ' };
+      }
 
       this.persistDatabase();
       this.notify();
@@ -3263,7 +3277,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
     }
 
     try {
-      this.db.run("BEGIN TRANSACTION;");
+      this.db.run("PRAGMA foreign_keys = OFF;");
       
       // Delete details first
       this.db.run("DELETE FROM ho_so_kham_chi_tiet WHERE id_ho_so IN (SELECT id FROM ho_so_kham WHERE id_nhan_su = ?);", [id]);
@@ -3272,14 +3286,14 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       // Delete the patient
       this.db.run("DELETE FROM can_bo WHERE id = ?;", [id]);
       
-      this.db.run("COMMIT;");
+      this.db.run("PRAGMA foreign_keys = ON;");
 
       this.persistDatabase();
       this.notify();
 
       return { success: true, message: 'Đã xóa cán bộ và toàn bộ lịch sử khám bệnh liên quan.' };
     } catch (err: any) {
-      try { this.db.run("ROLLBACK;"); } catch (e) {}
+      this.db.run("PRAGMA foreign_keys = ON;");
       console.error('Lỗi khi xóa cán bộ:', err);
       return { success: false, message: 'Lỗi khi xóa cán bộ: ' + (err.message || err) };
     }
@@ -3294,7 +3308,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       const countBefore = this.db.exec("SELECT COUNT(*) FROM can_bo");
       const count = countBefore.length > 0 ? Number(countBefore[0].values[0][0]) : 0;
 
-      this.db.run("BEGIN TRANSACTION;");
+      this.db.run("PRAGMA foreign_keys = OFF;");
       
       this.db.run("DELETE FROM ho_so_kham_chi_tiet;");
       this.db.run("DELETE FROM ho_so_kham;");
@@ -3307,7 +3321,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         console.warn('sqlite_sequence reset note:', seqErr);
       }
       
-      this.db.run("COMMIT;");
+      this.db.run("PRAGMA foreign_keys = ON;");
 
       this.persistDatabase();
       this.notify();
@@ -3318,7 +3332,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         deletedCount: count
       };
     } catch (e: any) {
-      try { this.db.run("ROLLBACK;"); } catch (err) {}
+      try { this.db.run("PRAGMA foreign_keys = ON;"); } catch (err) {}
       console.error('Clear all patients error:', e);
       return { success: false, message: e.message || 'Lỗi khi xóa toàn bộ cán bộ.', deletedCount: 0 };
     }

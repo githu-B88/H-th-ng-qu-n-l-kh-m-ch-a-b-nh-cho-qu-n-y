@@ -82,7 +82,7 @@ export const DoctorManager: React.FC = () => {
     }
     const docToDelete = bacSiList.find(b => b.id === id);
     const name = docToDelete ? docToDelete.ho_ten : 'Bác sĩ này';
-    if (window.confirm(`Bạn có chắc chắn muốn xóa "${name}"? Các hồ sơ khám liên quan sẽ được tự động chuyển giao an toàn cho bác sĩ khác.`)) {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa "${name}" khỏi hệ thống?`)) {
       const res = sqliteService.deleteBacSi(id);
       if (res && !res.success) {
         alert(res.error || 'Không thể xóa bác sĩ!');

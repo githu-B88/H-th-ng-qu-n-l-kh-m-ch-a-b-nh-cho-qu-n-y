@@ -105,7 +105,7 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
     if (!cq && (p as any).id_don_vi) {
         cq = donViCap2List.find(d => d.id === (p as any).id_don_vi);
     }
-    const id_don_vi_cap_1 = cq ? cq.id_don_vi_cap_1 : undefined;
+    const id_don_vi_cap_1 = cq ? cq.id_don_vi_cap_1 : (p.id_don_vi_cap_1 ? Number(p.id_don_vi_cap_1) : undefined);
 
     let tu_ngay = '';
     let den_ngay = '';
@@ -222,7 +222,7 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
         const capBac = row[4]?.toString().trim() || '';
         const chucVu = row[5]?.toString().trim() || '';
         const donViCap1Ten = row[6]?.toString().trim() || 'Phòng Tham mưu Vùng';
-        const donViCap2Ten = row[7]?.toString().trim() || 'Ban Tác chiến';
+        const donViCap2Ten = row[7]?.toString().trim() || '';
         const maTheBhyt = row[8]?.toString().trim() || '';
         const tuNgay = parseExcelDate(row[9]);
         const denNgay = parseExcelDate(row[10]);
@@ -234,11 +234,14 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
           cap1List.push({ id: idCap1, ten: donViCap1Ten });
         }
 
-        let idCap2 = cap2List.find((x: any) => x.ten?.toLowerCase() === donViCap2Ten.toLowerCase() && x.id_don_vi_cap_1 === idCap1)?.id;
-        if (!idCap2) {
-          const res2 = (sqliteService as any).run("INSERT INTO don_vi_cap_2 (id_don_vi_cap_1, ten) VALUES (?, ?)", [idCap1, donViCap2Ten]);
-          idCap2 = res2.lastInsertRowId;
-          cap2List.push({ id: idCap2, id_don_vi_cap_1: idCap1, ten: donViCap2Ten });
+        let idCap2: number | null = null;
+        if (donViCap2Ten) {
+          idCap2 = cap2List.find((x: any) => x.ten?.toLowerCase() === donViCap2Ten.toLowerCase() && x.id_don_vi_cap_1 === idCap1)?.id || null;
+          if (!idCap2) {
+            const res2 = (sqliteService as any).run("INSERT INTO don_vi_cap_2 (id_don_vi_cap_1, ten) VALUES (?, ?)", [idCap1, donViCap2Ten]);
+            idCap2 = res2.lastInsertRowId;
+            cap2List.push({ id: idCap2, id_don_vi_cap_1: idCap1, ten: donViCap2Ten });
+          }
         }
 
         let existingPatient = null;
@@ -251,7 +254,8 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
           ho_ten: hoTen,
           ngay_sinh: ngaySinh,
           gioi_tinh: gioiTinh,
-          id_don_vi_cap_2: idCap2,
+          id_don_vi_cap_1: idCap1,
+          id_don_vi_cap_2: idCap2 || null,
           ma_the_bhyt: maTheBhyt,
           cap_bac: capBac,
           chuc_vu: chucVu,

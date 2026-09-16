@@ -52,6 +52,14 @@ interface ExamDeskProps {
   preSelectedPatientId?: number | null;
 }
 
+const getDonViDisplay = (cap1?: string, cap2?: string) => {
+  const cap1Str = cap1 || 'Không rõ';
+  if (cap2 && cap2.trim() !== '' && cap2.trim().toLowerCase() !== 'cơ quan') {
+    return `${cap1Str} - ${cap2}`;
+  }
+  return cap1Str;
+};
+
 export const ExamDesk: React.FC<ExamDeskProps> = ({
   bacSiList = [],
   selectedBacSiId,
@@ -670,14 +678,16 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                             </span>
                           </div>
                           <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                            <span className="text-sky-700 font-medium">{patient.ten_don_vi || 'Cơ quan'}</span>
+                            <span className="text-sky-700 font-medium">
+                              {getDonViDisplay(patient.ten_don_vi_cap_1, patient.ten_don_vi)}
+                            </span>
                             <span>•</span>
                             <span>{patient.chuc_vu || patient.cap_bac || 'Cán bộ'}</span>
                           </div>
                         </div>
                         <div className="text-right">
                           <span className="font-mono text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
-                            {patient.the_bhyt || 'Không BHYT'}
+                            {(patient.ma_the_bhyt || patient.the_bhyt) ? `BHYT: ${patient.ma_the_bhyt || patient.the_bhyt}` : 'Không BHYT'}
                           </span>
                         </div>
                       </button>
@@ -709,11 +719,11 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                       {selectedPatient.ho_ten}
                     </div>
                     <div className="text-sky-800 font-medium">
-                      {selectedPatient.ten_don_vi || 'Cán bộ nội bộ'} - {selectedPatient.chuc_vu || selectedPatient.cap_bac || 'Nhân viên'}
+                      {getDonViDisplay(selectedPatient.ten_don_vi_cap_1, selectedPatient.ten_don_vi)} - {selectedPatient.chuc_vu || selectedPatient.cap_bac || 'Nhân viên'}
                     </div>
                   </div>
                   <Badge variant="primary">
-                    BHYT: {selectedPatient.the_bhyt || 'Chưa cập nhật'}
+                    {(selectedPatient.ma_the_bhyt || selectedPatient.the_bhyt) ? `BHYT: ${selectedPatient.ma_the_bhyt || selectedPatient.the_bhyt}` : 'Không BHYT'}
                   </Badge>
                 </div>
 
