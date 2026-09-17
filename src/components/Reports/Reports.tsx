@@ -297,11 +297,21 @@ export const Reports: React.FC = () => {
       const rows = rawExamsData.map((row, idx) => {
         const theBHYT = row.ma_the_bhyt || row.the_bhyt || '';
         const chanDoan = row.chan_doan || '';
-        let donVi = row.ten_don_vi_cap_1 || '';
-        if (row.ten_don_vi_cap_2 && row.ten_don_vi_cap_2.trim() !== '' && row.ten_don_vi_cap_2.trim().toLowerCase() !== 'cơ quan') {
-          donVi = donVi ? `${donVi} - ${row.ten_don_vi_cap_2}` : row.ten_don_vi_cap_2;
+        
+        let donVi = row.ten_don_vi_cap_1 || 'Không rõ';
+        if (donVi === 'Khối Cơ quan / Chưa phân bổ') donVi = '';
+        
+        let cap2 = row.ten_don_vi_cap_2 || row.ten_don_vi || '';
+        if (cap2 === 'Chưa phân bổ' || cap2.trim().toLowerCase() === 'cơ quan') {
+          cap2 = '';
+        }
+        
+        if (donVi && cap2) {
+          donVi = `${donVi} - ${cap2}`;
+        } else if (cap2) {
+          donVi = cap2;
         } else if (!donVi) {
-          donVi = row.ten_don_vi || '';
+          donVi = row.ten_don_vi_cap_1 || 'Chưa phân bổ';
         }
         
         let formattedDate = row.ngay_kham || '';
@@ -349,7 +359,7 @@ export const Reports: React.FC = () => {
       const rows = groupedItems.map((row, idx) => {
         const loaiLabel =
           row.loai_muc === 'thuoc'
-            ? 'Thuốc tân dược'
+            ? 'Thuốc'
             : row.loai_muc === 'vat_tu'
             ? 'Vật tư y tế'
             : 'Dịch vụ kỹ thuật';
