@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import * as XLSX from 'xlsx';
 import {
   FileSpreadsheet,
   Calendar,
@@ -278,16 +279,9 @@ export const Reports: React.FC = () => {
     };
   }, [groupedItems]);
 
-  // Export CSV Helper (With UTF-8 BOM and full officer/patient information)
-  const handleExportCSV = () => {
-    const BOM = '\uFEFF';
-    let csvString = '';
-
-    const escapeCSV = (val: any) => {
-      if (val === null || val === undefined) return '""';
-      const cleanVal = String(val).replace(/"/g, '""');
-      return `"${cleanVal}"`;
-    };
+  // Export Excel (.xlsx) Helper using SheetJS to completely prevent CSV column collapsing
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
 
     if (activeTab === 'chi_phi_can_bo') {
       const headers = [
@@ -299,12 +293,16 @@ export const Reports: React.FC = () => {
         'Chẩn đoán',
         'Ghi chú'
       ];
-      csvString += headers.map(escapeCSV).join(',') + '\r\n';
 
-      rawExamsData.forEach((row, idx) => {
-        const theBHYT = row.ma_the_bhyt || '';
+      const rows = rawExamsData.map((row, idx) => {
+        const theBHYT = row.ma_the_bhyt || row.the_bhyt || '';
         const chanDoan = row.chan_doan || '';
-        const donVi = row.ten_don_vi_cap_1 || '';
+        let donVi = row.ten_don_vi_cap_1 || '';
+        if (row.ten_don_vi_cap_2 && row.ten_don_vi_cap_2.trim() !== '' && row.ten_don_vi_cap_2.trim().toLowerCase() !== 'cơ quan') {
+          donVi = donVi ? `${donVi} - ${row.ten_don_vi_cap_2}` : row.ten_don_vi_cap_2;
+        } else if (!donVi) {
+          donVi = row.ten_don_vi || '';
+        }
         
         let formattedDate = row.ngay_kham || '';
         if (formattedDate.includes('-')) {
@@ -314,7 +312,7 @@ export const Reports: React.FC = () => {
           }
         }
 
-        const lineData = [
+        return [
           idx + 1,
           row.ten_nhan_su || '',
           donVi,
@@ -323,9 +321,19 @@ export const Reports: React.FC = () => {
           chanDoan,
           '' // Ghi chú mặc định trống
         ];
-
-        csvString += lineData.map(escapeCSV).join(',') + '\r\n';
       });
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [
+        { wch: 6 },   // STT
+        { wch: 25 },  // Tên bệnh nhân
+        { wch: 32 },  // Đơn vị
+        { wch: 20 },  // Thẻ bảo hiểm
+        { wch: 14 },  // Ngày khám
+        { wch: 35 },  // Chẩn đoán
+        { wch: 16 }   // Ghi chú
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, "Bang_Ke_Chi_Phi");
     } else {
       const headers = [
         'STT',
@@ -337,9 +345,8 @@ export const Reports: React.FC = () => {
         'Thành Tiền (VND)',
         'Tỷ Trọng (%)'
       ];
-      csvString += headers.map(escapeCSV).join(',') + '\r\n';
 
-      groupedItems.forEach((row, idx) => {
+      const rows = groupedItems.map((row, idx) => {
         const loaiLabel =
           row.loai_muc === 'thuoc'
             ? 'Thuốc tân dược'
@@ -351,7 +358,7 @@ export const Reports: React.FC = () => {
             ? Math.round((row.tong_thanh_tien / statsPart2.totalAll) * 100)
             : 0;
 
-        const lineData = [
+        return [
           idx + 1,
           row.ten_muc || '',
           loaiLabel,
@@ -361,7 +368,6 @@ export const Reports: React.FC = () => {
           row.tong_thanh_tien || 0,
           `${percentage}%`
         ];
-        csvString += lineData.map(escapeCSV).join(',') + '\r\n';
       });
 
       const summaryLine = [
@@ -374,23 +380,27 @@ export const Reports: React.FC = () => {
         statsPart2.totalAll,
         '100%'
       ];
-      csvString += summaryLine.map(escapeCSV).join(',') + '\r\n';
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows, summaryLine]);
+      ws['!cols'] = [
+        { wch: 6 },   // STT
+        { wch: 35 },  // Tên Danh Mục Y Tế
+        { wch: 18 },  // Phân Loại
+        { wch: 14 },  // Đơn Vị Tính
+        { wch: 18 },  // Số Lượng Đã Dùng
+        { wch: 16 },  // Đơn Giá (VND)
+        { wch: 18 },  // Thành Tiền (VND)
+        { wch: 14 }   // Tỷ Trọng (%)
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, "Thanh_Toan_Thuoc_VT");
     }
 
-    const blob = new Blob([BOM + csvString], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
     const dateStr = new Date().toISOString().split('T')[0];
     const fileName =
       activeTab === 'chi_phi_can_bo'
-        ? `Bao_Cao_Chi_Phi_Kham_Can_Bo_${dateStr}.csv`
-        : `Bao_Cao_Thanh_Toan_Thuoc_Vat_Tu_${dateStr}.csv`;
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+        ? `Bao_Cao_Chi_Phi_Kham_Can_Bo_${dateStr}.xlsx`
+        : `Bao_Cao_Thanh_Toan_Thuoc_Vat_Tu_${dateStr}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   };
 
   const handlePrint = () => {
@@ -437,12 +447,12 @@ export const Reports: React.FC = () => {
           </button>
 
           <button
-            onClick={handleExportCSV}
+            onClick={handleExportExcel}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-emerald-600/20 transition-all cursor-pointer"
-            title="Xuất bảng kê ra file CSV (UTF-8 Excel)"
+            title="Xuất bảng kê ra file Excel (.xlsx)"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Xuất CSV</span>
+            <span>Xuất Excel (.xlsx)</span>
           </button>
 
           <button
