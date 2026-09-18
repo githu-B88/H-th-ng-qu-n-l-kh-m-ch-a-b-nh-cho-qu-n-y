@@ -2855,16 +2855,17 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         ns.ngay_sinh as ngay_sinh_nhan_su,
         ns.cap_bac as cap_bac_nhan_su,
         ns.chuc_vu as chuc_vu_nhan_su,
-        COALESCE(cq.ten, 'Chưa phân bổ') as ten_don_vi,
-        COALESCE(cq.ten, 'Chưa phân bổ') as ten_don_vi_cap_2,
+        cq.ten as ten_don_vi,
+        cq.ten as ten_don_vi_cap_2,
         cq.id as id_don_vi_cap_2,
-        dv1.id as id_don_vi_cap_1,
-        COALESCE(dv1.ten, 'Khối Cơ quan / Chưa phân bổ') as ten_don_vi_cap_1,
+        COALESCE(ns.id_don_vi_cap_1, cq.id_don_vi_cap_1) as id_don_vi_cap_1,
+        COALESCE(dv1_ns_direct.ten, dv1.ten) as ten_don_vi_cap_1,
         COALESCE(bs.ho_ten, 'Bác sĩ trực') as ten_bac_si
       FROM ho_so_kham hs
       JOIN can_bo ns ON hs.id_nhan_su = ns.id
       LEFT JOIN don_vi_cap_2 cq ON ns.id_don_vi_cap_2 = cq.id
       LEFT JOIN don_vi_cap_1 dv1 ON cq.id_don_vi_cap_1 = dv1.id
+      LEFT JOIN don_vi_cap_1 dv1_ns_direct ON ns.id_don_vi_cap_1 = dv1_ns_direct.id
       LEFT JOIN bac_si bs ON hs.id_bac_si = bs.id
       WHERE 1=1
     `;
@@ -2878,8 +2879,8 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       params.push(filter.denNgay);
     }
     if (filter?.idDonViCap1) {
-      sql += ` AND (dv1.id = ? OR cq.id_don_vi_cap_1 = ?)`;
-      params.push(filter.idDonViCap1, filter.idDonViCap1);
+      sql += ` AND (dv1.id = ? OR cq.id_don_vi_cap_1 = ? OR ns.id_don_vi_cap_1 = ?)`;
+      params.push(filter.idDonViCap1, filter.idDonViCap1, filter.idDonViCap1);
     } else if (filter?.idDonVi) {
       sql += ` AND (ns.id_don_vi_cap_2 = ? OR cq.id = ?)`;
       params.push(filter.idDonVi, filter.idDonVi);
@@ -2891,7 +2892,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
         OR LOWER(hs.ma_ho_so) LIKE ? 
         OR LOWER(hs.chan_doan) LIKE ? 
         OR LOWER(COALESCE(cq.ten, '')) LIKE ? 
-        OR LOWER(COALESCE(dv1.ten, '')) LIKE ?
+        OR LOWER(COALESCE(dv1_ns_direct.ten, dv1.ten, '')) LIKE ?
         OR LOWER(COALESCE(ns.ma_the_bhyt, '')) LIKE ?
       )`;
       params.push(s, s, s, s, s, s);
@@ -3381,7 +3382,7 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       }
 
       // 3. Cập nhật lại cán bộ và bác sĩ trỏ về đơn vị hợp lệ
-      this.db.run("UPDATE can_bo SET id_don_vi_cap_2 = 1 WHERE id_don_vi_cap_2 NOT IN (SELECT id FROM don_vi_cap_2);");
+      this.db.run("UPDATE can_bo SET id_don_vi_cap_2 = NULL WHERE id_don_vi_cap_2 IS NOT NULL AND id_don_vi_cap_2 NOT IN (SELECT id FROM don_vi_cap_2);");
       this.db.run("UPDATE bac_si SET id_don_vi = 15 WHERE id_don_vi NOT IN (SELECT id FROM don_vi_cap_2);");
 
       this.db.run("PRAGMA foreign_keys = ON;");

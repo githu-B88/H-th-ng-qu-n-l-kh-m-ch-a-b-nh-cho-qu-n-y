@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { sqliteService } from '../../db/sqlite-service';
 import { CoQuan, DonViCap1, DonViCap2 } from '../../types';
+import { formatDonViCanBo } from '../../utils/formatDonVi';
 
 type TimeframeType = 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom';
 type TabType = 'chi_phi_can_bo' | 'thanh_toan_danh_muc';
@@ -297,22 +298,7 @@ export const Reports: React.FC = () => {
       const rows = rawExamsData.map((row, idx) => {
         const theBHYT = row.ma_the_bhyt || row.the_bhyt || '';
         const chanDoan = row.chan_doan || '';
-        
-        let donVi = row.ten_don_vi_cap_1 || 'Không rõ';
-        if (donVi === 'Khối Cơ quan / Chưa phân bổ') donVi = '';
-        
-        let cap2 = row.ten_don_vi_cap_2 || row.ten_don_vi || '';
-        if (cap2 === 'Chưa phân bổ' || cap2.trim().toLowerCase() === 'cơ quan') {
-          cap2 = '';
-        }
-        
-        if (donVi && cap2) {
-          donVi = `${donVi} - ${cap2}`;
-        } else if (cap2) {
-          donVi = cap2;
-        } else if (!donVi) {
-          donVi = row.ten_don_vi_cap_1 || 'Chưa phân bổ';
-        }
+        const donVi = formatDonViCanBo(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi);
         
         let formattedDate = row.ngay_kham || '';
         if (formattedDate.includes('-')) {
@@ -768,7 +754,7 @@ export const Reports: React.FC = () => {
                     <th className="py-3 px-3 text-center w-12">STT</th>
                     <th className="py-3 px-3 w-28">Mã Hồ Sơ</th>
                     <th className="py-3 px-4">Họ Tên Cán Bộ</th>
-                    <th className="py-3 px-4">Đơn Vị Trực Thuộc (Cấp 2)</th>
+                    <th className="py-3 px-4">Đơn Vị</th>
                     <th className="py-3 px-3 text-center w-28">Ngày Khám</th>
                     <th className="py-3 px-4">Chẩn Đoán Bệnh</th>
                     <th className="py-3 px-3 w-32">Bác Sĩ Khám</th>
@@ -791,7 +777,10 @@ export const Reports: React.FC = () => {
                     (() => {
                       // Group by Level 1 Unit (Đơn vị cấp 1)
                       const grouped = rawExamsData.reduce((acc, row) => {
-                        const donViCap1 = row.ten_don_vi_cap_1 || 'Khối Cơ quan / Chưa phân bổ';
+                        const rawCap1 = row.ten_don_vi_cap_1;
+                        const donViCap1 = (rawCap1 && rawCap1 !== 'Khối Cơ quan / Chưa phân bổ' && rawCap1 !== 'Chưa phân bổ')
+                          ? rawCap1
+                          : 'Đơn vị trực thuộc';
                         if (!acc[donViCap1]) acc[donViCap1] = [];
                         acc[donViCap1].push(row);
                         return acc;
@@ -863,9 +852,9 @@ export const Reports: React.FC = () => {
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
-                                      {row.ten_don_vi_cap_2 || row.ten_don_vi || '---'}
-                                    </span>
+                                    <div className="font-medium text-slate-800 text-xs">
+                                      {formatDonViCanBo(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi)}
+                                    </div>
                                   </td>
                                   <td className="py-3 px-3 text-center font-mono text-slate-600 font-medium">
                                     {row.ngay_kham}

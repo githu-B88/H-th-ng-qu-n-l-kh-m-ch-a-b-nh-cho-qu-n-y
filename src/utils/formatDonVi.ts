@@ -122,3 +122,48 @@ export const getFormattedDonVi = (
 
   return 'Phòng Tham mưu, BTL Vùng 5 HQ';
 };
+
+/**
+ * Chuẩn hóa cách hiển thị đơn vị của cán bộ theo đúng định dạng:
+ * [don_vi_cap_1], [don_vi_cap_2]
+ * Nếu đơn vị cấp 2 đang trống (null, undefined, '', 'Cơ quan', 'Chưa phân bổ'),
+ * chỉ show ra [don_vi_cap_1], tuyệt đối không còn cụm từ/từ nào khác.
+ */
+export const formatDonViCanBo = (
+  donViCap1?: string | null,
+  donViCap2?: string | null
+): string => {
+  let c1 = (donViCap1 || '').trim();
+  let c2 = (donViCap2 || '').trim();
+
+  // Loại bỏ các cụm từ placeholder hoặc không hợp lệ
+  const isInvalidPlaceholder = (val: string) => {
+    const v = val.toLowerCase();
+    return (
+      v === 'khối cơ quan / chưa phân bổ' ||
+      v === 'chưa phân bổ' ||
+      v === 'không rõ' ||
+      v === 'cơ quan' ||
+      v === 'null' ||
+      v === 'undefined'
+    );
+  };
+
+  if (isInvalidPlaceholder(c1)) {
+    c1 = '';
+  }
+
+  if (isInvalidPlaceholder(c2)) {
+    c2 = '';
+  }
+
+  // Nếu cấp 2 trùng tên với cấp 1 thì không lặp lại
+  if (c1 && c2 && c1.toLowerCase() === c2.toLowerCase()) {
+    c2 = '';
+  }
+
+  if (c1 && c2) {
+    return `${c1}, ${c2}`;
+  }
+  return c1 || c2 || '';
+};

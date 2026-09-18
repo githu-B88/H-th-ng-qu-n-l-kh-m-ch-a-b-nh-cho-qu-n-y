@@ -11,6 +11,7 @@ import {
   CoQuan
 } from '../../types';
 import { sqliteService } from '../../db/sqlite-service';
+import { formatDonViCanBo } from '../../utils/formatDonVi';
 import {
   User,
   Activity,
@@ -53,11 +54,7 @@ interface ExamDeskProps {
 }
 
 const getDonViDisplay = (cap1?: string, cap2?: string) => {
-  const cap1Str = cap1 || 'Không rõ';
-  if (cap2 && cap2.trim() !== '' && cap2.trim().toLowerCase() !== 'cơ quan') {
-    return `${cap1Str} - ${cap2}`;
-  }
-  return cap1Str;
+  return formatDonViCanBo(cap1, cap2);
 };
 
 export const ExamDesk: React.FC<ExamDeskProps> = ({
@@ -679,10 +676,14 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                           </div>
                           <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
                             <span className="text-sky-700 font-medium">
-                              {getDonViDisplay(patient.ten_don_vi_cap_1, patient.ten_don_vi)}
+                              {getDonViDisplay(patient.ten_don_vi_cap_1, patient.ten_don_vi_cap_2 || patient.ten_don_vi)}
                             </span>
-                            <span>•</span>
-                            <span>{patient.chuc_vu || patient.cap_bac || 'Cán bộ'}</span>
+                            {(patient.chuc_vu || patient.cap_bac) && (
+                              <>
+                                <span>•</span>
+                                <span>{patient.chuc_vu || patient.cap_bac}</span>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
@@ -719,7 +720,8 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                       {selectedPatient.ho_ten}
                     </div>
                     <div className="text-sky-800 font-medium">
-                      {getDonViDisplay(selectedPatient.ten_don_vi_cap_1, selectedPatient.ten_don_vi)} - {selectedPatient.chuc_vu || selectedPatient.cap_bac || 'Nhân viên'}
+                      {getDonViDisplay(selectedPatient.ten_don_vi_cap_1, selectedPatient.ten_don_vi_cap_2 || selectedPatient.ten_don_vi)}
+                      {(selectedPatient.chuc_vu || selectedPatient.cap_bac) ? ` • ${selectedPatient.chuc_vu || selectedPatient.cap_bac}` : ''}
                     </div>
                   </div>
                   <Badge variant="primary">
@@ -1375,7 +1377,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                   }}
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all disabled:opacity-50 disabled:bg-slate-100"
                 >
-                  <option value="">-- Chọn đơn vị cấp 2 --</option>
+                  <option value="">-- Để trống (Chưa có đơn vị cấp 2) --</option>
                   {donViCap2List
                     .filter((cq) => cq.id_don_vi_cap_1 === newPatient.id_don_vi_cap_1)
                     .map((cq) => (

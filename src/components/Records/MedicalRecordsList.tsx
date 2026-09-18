@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HoSoKham, CoQuan, DonViCap1, DonViCap2 } from '../../types';
+import { formatDonViCanBo } from '../../utils/formatDonVi';
 import { sqliteService } from '../../db/sqlite-service';
 import {
   Search,
@@ -29,11 +30,7 @@ interface MedicalRecordsListProps {
 }
 
 const getDonViDisplay = (cap1?: string, cap2?: string) => {
-  const cap1Str = cap1 || 'Không rõ';
-  if (cap2 && cap2.trim() !== '' && cap2.trim().toLowerCase() !== 'cơ quan') {
-    return `${cap1Str} - ${cap2}`;
-  }
-  return cap1Str;
+  return formatDonViCanBo(cap1, cap2);
 };
 
 export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
@@ -650,8 +647,10 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
               <div>
                 <span className="text-slate-500">Đơn vị / Chức vụ:</span>
                 <div className="font-medium text-slate-800">
-                  {getDonViDisplay(viewRecord.ten_don_vi_cap_1, viewRecord.ten_don_vi_cap_2 || viewRecord.ten_don_vi_nhan_su)} (
-                  {viewRecord.chuc_vu_nhan_su || viewRecord.cap_bac_nhan_su || 'Cán bộ'})
+                  {getDonViDisplay(viewRecord.ten_don_vi_cap_1, viewRecord.ten_don_vi_cap_2 || viewRecord.ten_don_vi_nhan_su)}
+                  {[viewRecord.chuc_vu_nhan_su, viewRecord.cap_bac_nhan_su].filter(Boolean).length > 0
+                    ? ` • ${[viewRecord.chuc_vu_nhan_su, viewRecord.cap_bac_nhan_su].filter(Boolean).join(' - ')}`
+                    : ''}
                 </div>
               </div>
               <div>

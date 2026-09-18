@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { CanBo, DonViCap1, DonViCap2, HoSoKham } from '../../types';
+import { formatDonViCanBo } from '../../utils/formatDonVi';
 import { sqliteService } from '../../db/sqlite-service';
 import {
   Users,
@@ -455,13 +456,10 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
                   filteredPatients.map((p) => {
                     const theBhyt = p.ma_the_bhyt || (p as any).the_bhyt;
                     const d2 = donViCap2List.find(d => d.id === (p.id_don_vi_cap_2 || (p as any).id_don_vi));
-const d1 = donViCap1List.find(d => d.id === d2?.id_don_vi_cap_1);
-const tenDonViCap1 = p.ten_don_vi_cap_1 || d1?.ten;
-const tenDonViCap2 = p.ten_don_vi || d2?.ten;
-let fullDonVi = 'Chưa phân bổ';
-if (tenDonViCap1 && tenDonViCap2) fullDonVi = `${tenDonViCap2} - ${tenDonViCap1}`;
-else if (tenDonViCap2) fullDonVi = tenDonViCap2;
-else if (tenDonViCap1) fullDonVi = tenDonViCap1;
+                    const d1 = donViCap1List.find(d => d.id === (p.id_don_vi_cap_1 || d2?.id_don_vi_cap_1));
+                    const tenDonViCap1 = p.ten_don_vi_cap_1 || d1?.ten;
+                    const tenDonViCap2 = p.ten_don_vi || d2?.ten;
+                    const fullDonVi = formatDonViCanBo(tenDonViCap1, tenDonViCap2);
                     return (
                     <tr key={p.id} className="hover:bg-sky-50/40 transition-colors group">
                       <td className="py-3 px-4">
@@ -630,7 +628,7 @@ else if (tenDonViCap1) fullDonVi = tenDonViCap1;
                           })
                         }
                       >
-                        <option value="">-- Chọn đơn vị cấp 2 --</option>
+                        <option value="">-- Để trống (Chưa có đơn vị cấp 2) --</option>
                         {donViCap2List
                           .filter(cq => cq.id_don_vi_cap_1 === editingPatient.id_don_vi_cap_1)
                           .map((cq) => (
