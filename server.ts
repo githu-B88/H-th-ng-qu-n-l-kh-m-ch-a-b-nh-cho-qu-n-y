@@ -12,7 +12,7 @@ import {
   SEED_NHAN_SU,
   MORE_NHAN_SU,
   SEED_NGUOI_DUNG
-} from './src/db/seed-data';
+} from './src/db/seed-data.ts';
 
 const PORT = 3000;
 const app = express();

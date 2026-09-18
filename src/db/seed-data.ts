@@ -1,4 +1,4 @@
-import { CoQuan, BacSi, NhanSu, Thuoc, VatTu, DichVuKT, MauBenh } from '../types';
+import type { CoQuan, BacSi, NhanSu, Thuoc, VatTu, DichVuKT, MauBenh } from '../types.ts';
 
 export const SEED_DON_VI_CAP_1 = [
   { id: 1, ten: 'Phòng Tham mưu Vùng', ghi_chu: 'Cơ quan tham mưu tác chiến, quân huấn, quân lực Vùng 5 Hải quân' },

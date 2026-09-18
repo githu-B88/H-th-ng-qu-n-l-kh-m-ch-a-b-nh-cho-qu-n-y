@@ -333,8 +333,7 @@ export const Reports: React.FC = () => {
         'Đơn Vị Tính',
         'Số Lượng Đã Dùng',
         'Đơn Giá (VND)',
-        'Thành Tiền (VND)',
-        'Tỷ Trọng (%)'
+        'Thành Tiền (VND)'
       ];
 
       const rows = groupedItems.map((row, idx) => {
@@ -344,10 +343,6 @@ export const Reports: React.FC = () => {
             : row.loai_muc === 'vat_tu'
             ? 'Vật tư y tế'
             : 'Dịch vụ kỹ thuật';
-        const percentage =
-          statsPart2.totalAll > 0
-            ? Math.round((row.tong_thanh_tien / statsPart2.totalAll) * 100)
-            : 0;
 
         return [
           idx + 1,
@@ -356,8 +351,7 @@ export const Reports: React.FC = () => {
           row.don_vi_tinh || '',
           row.tong_so_luong || 0,
           row.don_gia || 0,
-          row.tong_thanh_tien || 0,
-          `${percentage}%`
+          row.tong_thanh_tien || 0
         ];
       });
 
@@ -368,8 +362,7 @@ export const Reports: React.FC = () => {
         '',
         '',
         '',
-        statsPart2.totalAll,
-        '100%'
+        statsPart2.totalAll
       ];
 
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows, summaryLine]);
@@ -380,8 +373,7 @@ export const Reports: React.FC = () => {
         { wch: 14 },  // Đơn Vị Tính
         { wch: 18 },  // Số Lượng Đã Dùng
         { wch: 16 },  // Đơn Giá (VND)
-        { wch: 18 },  // Thành Tiền (VND)
-        { wch: 14 }   // Tỷ Trọng (%)
+        { wch: 18 }   // Thành Tiền (VND)
       ];
       XLSX.utils.book_append_sheet(wb, ws, "Thanh_Toan_Thuoc_VT");
     }
