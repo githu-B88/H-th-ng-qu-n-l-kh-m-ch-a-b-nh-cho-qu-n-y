@@ -53,13 +53,11 @@ interface ExamDeskProps {
 }
 
 const getDonViDisplay = (cap1?: string, cap2?: string) => {
-  const validCap1 = cap1 && cap1 !== 'Khối Cơ quan / Chưa phân bổ' ? cap1 : '';
-  const validCap2 = cap2 && cap2 !== 'Chưa phân bổ' && cap2.trim().toLowerCase() !== 'cơ quan' ? cap2 : '';
-  
-  if (validCap2) {
-    return validCap1 ? `${validCap2}, ${validCap1}` : validCap2;
+  const cap1Str = cap1 || 'Không rõ';
+  if (cap2 && cap2.trim() !== '' && cap2.trim().toLowerCase() !== 'cơ quan') {
+    return `${cap1Str} - ${cap2}`;
   }
-  return validCap1 || 'Không rõ';
+  return cap1Str;
 };
 
 export const ExamDesk: React.FC<ExamDeskProps> = ({

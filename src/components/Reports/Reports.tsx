@@ -30,16 +30,6 @@ type TimeframeType = 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom';
 type TabType = 'chi_phi_can_bo' | 'thanh_toan_danh_muc';
 type LoaiMucFilter = 'all' | 'thuoc' | 'vat_tu' | 'dich_vu_kt';
 
-const getDonViDisplay = (cap1?: string, cap2?: string) => {
-  const validCap1 = cap1 && cap1 !== 'Khối Cơ quan / Chưa phân bổ' ? cap1 : '';
-  const validCap2 = cap2 && cap2 !== 'Chưa phân bổ' && cap2.trim().toLowerCase() !== 'cơ quan' ? cap2 : '';
-  
-  if (validCap2) {
-    return validCap1 ? `${validCap2}, ${validCap1}` : validCap2;
-  }
-  return validCap1 || 'Chưa phân bổ';
-};
-
 export const Reports: React.FC = () => {
   // Tab control
   const [activeTab, setActiveTab] = useState<TabType>('chi_phi_can_bo');
@@ -308,7 +298,21 @@ export const Reports: React.FC = () => {
         const theBHYT = row.ma_the_bhyt || row.the_bhyt || '';
         const chanDoan = row.chan_doan || '';
         
-        const donVi = getDonViDisplay(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi);
+        let donVi = row.ten_don_vi_cap_1 || 'Không rõ';
+        if (donVi === 'Khối Cơ quan / Chưa phân bổ') donVi = '';
+        
+        let cap2 = row.ten_don_vi_cap_2 || row.ten_don_vi || '';
+        if (cap2 === 'Chưa phân bổ' || cap2.trim().toLowerCase() === 'cơ quan') {
+          cap2 = '';
+        }
+        
+        if (donVi && cap2) {
+          donVi = `${donVi} - ${cap2}`;
+        } else if (cap2) {
+          donVi = cap2;
+        } else if (!donVi) {
+          donVi = row.ten_don_vi_cap_1 || 'Chưa phân bổ';
+        }
         
         let formattedDate = row.ngay_kham || '';
         if (formattedDate.includes('-')) {
@@ -787,8 +791,7 @@ export const Reports: React.FC = () => {
                     (() => {
                       // Group by Level 1 Unit (Đơn vị cấp 1)
                       const grouped = rawExamsData.reduce((acc, row) => {
-                        const rawCap1 = row.ten_don_vi_cap_1 && row.ten_don_vi_cap_1 !== 'Khối Cơ quan / Chưa phân bổ' ? row.ten_don_vi_cap_1 : 'Chưa phân bổ';
-                        const donViCap1 = rawCap1;
+                        const donViCap1 = row.ten_don_vi_cap_1 || 'Khối Cơ quan / Chưa phân bổ';
                         if (!acc[donViCap1]) acc[donViCap1] = [];
                         acc[donViCap1].push(row);
                         return acc;
@@ -861,7 +864,7 @@ export const Reports: React.FC = () => {
                                   </td>
                                   <td className="py-3 px-4">
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
-                                      {getDonViDisplay(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi)}
+                                      {row.ten_don_vi_cap_2 || row.ten_don_vi || '---'}
                                     </span>
                                   </td>
                                   <td className="py-3 px-3 text-center font-mono text-slate-600 font-medium">
@@ -1263,7 +1266,7 @@ export const Reports: React.FC = () => {
                     <td className="text-center">{row.gioi_tinh_nhan_su || row.gioi_tinh || '---'}</td>
                     <td className="text-center font-mono">{row.ma_the_bhyt || '---'}</td>
                     <td>{[row.cap_bac_nhan_su, row.chuc_vu_nhan_su].filter(Boolean).join(' - ') || '---'}</td>
-                    <td>{getDonViDisplay(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi)}</td>
+                    <td>{row.ten_don_vi_cap_2 || row.ten_don_vi || '---'}</td>
                     <td className="text-center font-mono">{row.ngay_kham}</td>
                     <td>{row.chan_doan}</td>
                     <td>{row.ten_bac_si}</td>
