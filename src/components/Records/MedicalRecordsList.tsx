@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { HoSoKham, CoQuan, DonViCap1, DonViCap2 } from '../../types';
 import { formatDonViCanBo } from '../../utils/formatDonVi';
+import { formatDateToVN } from '../../utils/dateFormat';
+import { DateInput } from '../common/DateInput';
 import { sqliteService } from '../../db/sqlite-service';
 import {
   Search,
@@ -415,21 +417,19 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
 
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2">
             <span className="text-slate-400 text-[11px] shrink-0">Từ:</span>
-            <input
-              type="date"
+            <DateInput
               value={tuNgay}
-              onChange={(e) => setTuNgay(e.target.value)}
-              className="w-full py-1.5 bg-transparent text-xs text-slate-800 focus:outline-hidden"
+              onChange={(val) => setTuNgay(val)}
+              className="w-full"
             />
           </div>
 
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2">
             <span className="text-slate-400 text-[11px] shrink-0">Đến:</span>
-            <input
-              type="date"
+            <DateInput
               value={denNgay}
-              onChange={(e) => setDenNgay(e.target.value)}
-              className="w-full py-1.5 bg-transparent text-xs text-slate-800 focus:outline-hidden"
+              onChange={(val) => setDenNgay(val)}
+              className="w-full"
             />
           </div>
         </div>
@@ -476,7 +476,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
                       {r.ma_ho_so}
                     </td>
                     <td className="py-3 px-4 font-medium text-slate-700">
-                      {r.ngay_kham}
+                      {formatDateToVN(r.ngay_kham)}
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-bold text-slate-900">{r.ten_nhan_su}</div>
@@ -625,13 +625,13 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
       <Modal
         isOpen={!!viewRecord}
         onClose={() => setViewRecord(null)}
-        title={`Chi Tiết Hồ Sơ Khám: ${viewRecord?.ma_ho_so || ''}`}
+        title={`Chi Tiết Hồ Sơ Khám: ${viewRecord?.ma_ho_so || ''} - Ngày ${formatDateToVN(viewRecord?.ngay_kham)}`}
         maxWidth="4xl"
       >
         {viewRecord && (
           <div className="space-y-5 text-xs">
             {/* Header info */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
               <div>
                 <span className="text-slate-500">Cán bộ:</span>
                 <div className="font-bold text-slate-900 text-sm">
@@ -641,7 +641,13 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
               <div>
                 <span className="text-slate-500">Ngày sinh / Giới tính:</span>
                 <div className="font-medium text-slate-800">
-                  {viewRecord.ngay_sinh_nhan_su || '---'} ({viewRecord.gioi_tinh_nhan_su})
+                  {formatDateToVN(viewRecord.ngay_sinh_nhan_su) || '---'} ({viewRecord.gioi_tinh_nhan_su})
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-500">Ngày khám:</span>
+                <div className="font-bold text-sky-800">
+                  {formatDateToVN(viewRecord.ngay_kham)}
                 </div>
               </div>
               <div>
@@ -844,7 +850,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Ngày khám:</span>
-                <span className="font-medium text-slate-800">{recordToDelete.ngay_kham}</span>
+                <span className="font-medium text-slate-800">{formatDateToVN(recordToDelete.ngay_kham)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Chẩn đoán:</span>

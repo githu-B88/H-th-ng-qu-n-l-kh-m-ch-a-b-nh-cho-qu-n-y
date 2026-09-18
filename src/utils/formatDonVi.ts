@@ -125,7 +125,7 @@ export const getFormattedDonVi = (
 
 /**
  * Chuẩn hóa cách hiển thị đơn vị của cán bộ theo đúng định dạng:
- * [don_vi_cap_1], [don_vi_cap_2]
+ * [don_vi_cap_2], [don_vi_cap_1]
  * Nếu đơn vị cấp 2 đang trống (null, undefined, '', 'Cơ quan', 'Chưa phân bổ'),
  * chỉ show ra [don_vi_cap_1], tuyệt đối không còn cụm từ/từ nào khác.
  */
@@ -163,7 +163,7 @@ export const formatDonViCanBo = (
   }
 
   if (c1 && c2) {
-    return `${c1}, ${c2}`;
+    return `${c2}, ${c1}`;
   }
   return c1 || c2 || '';
 };

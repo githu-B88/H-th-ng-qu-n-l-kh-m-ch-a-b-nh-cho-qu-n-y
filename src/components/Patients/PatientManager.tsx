@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { CanBo, DonViCap1, DonViCap2, HoSoKham } from '../../types';
 import { formatDonViCanBo } from '../../utils/formatDonVi';
+import { formatDateToVN } from '../../utils/dateFormat';
+import { DateInput } from '../common/DateInput';
 import { sqliteService } from '../../db/sqlite-service';
 import {
   Users,
@@ -470,14 +472,21 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
                           )}
                         </div>
                         <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-                          <span>{p.ngay_sinh || '---'}</span>
+                          <span>{formatDateToVN(p.ngay_sinh) || '---'}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         {theBhyt ? (
-                          <div className="flex items-center gap-1.5">
-                            <CreditCard className="w-4 h-4 text-emerald-600" />
-                            <span className="font-mono font-bold text-slate-700">{theBhyt}</span>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <CreditCard className="w-4 h-4 text-emerald-600" />
+                              <span className="font-mono font-bold text-slate-700">{theBhyt}</span>
+                            </div>
+                            {(p.tu_ngay || p.den_ngay) && (
+                              <div className="text-[11px] text-slate-500">
+                                {formatDateToVN(p.tu_ngay)} - {formatDateToVN(p.den_ngay)}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-slate-400 italic text-sm">Không có thẻ</span>
@@ -562,12 +571,11 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Ngày sinh</label>
-                <input
-                  type="date"
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                <DateInput
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg focus-within:bg-white focus-within:border-sky-500"
                   value={editingPatient.ngay_sinh || ''}
-                  onChange={(e) =>
-                    setEditingPatient({ ...editingPatient, ngay_sinh: e.target.value })
+                  onChange={(val) =>
+                    setEditingPatient({ ...editingPatient, ngay_sinh: val })
                   }
                 />
               </div>
@@ -689,23 +697,21 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
                     </div>
                     <div>
                       <label className="block font-semibold text-slate-700 mb-1 text-sm">Từ ngày</label>
-                      <input
-                        type="date"
-                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                      <DateInput
+                        className="w-full bg-white border border-slate-200 rounded-lg focus-within:border-emerald-500"
                         value={editingPatient.tu_ngay || ''}
-                        onChange={(e) =>
-                          setEditingPatient({ ...editingPatient, tu_ngay: e.target.value })
+                        onChange={(val) =>
+                          setEditingPatient({ ...editingPatient, tu_ngay: val })
                         }
                       />
                     </div>
                     <div>
                       <label className="block font-semibold text-slate-700 mb-1 text-sm">Đến ngày</label>
-                      <input
-                        type="date"
-                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                      <DateInput
+                        className="w-full bg-white border border-slate-200 rounded-lg focus-within:border-emerald-500"
                         value={editingPatient.den_ngay || ''}
-                        onChange={(e) =>
-                          setEditingPatient({ ...editingPatient, den_ngay: e.target.value })
+                        onChange={(val) =>
+                          setEditingPatient({ ...editingPatient, den_ngay: val })
                         }
                       />
                     </div>
@@ -773,7 +779,7 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="success">Hoàn thành</Badge>
-                      <div className="text-sm font-semibold text-slate-600">{hs.ngay_kham}</div>
+                      <div className="text-sm font-semibold text-slate-600">{formatDateToVN(hs.ngay_kham)}</div>
                       <button
                         type="button"
                         onClick={async () => {

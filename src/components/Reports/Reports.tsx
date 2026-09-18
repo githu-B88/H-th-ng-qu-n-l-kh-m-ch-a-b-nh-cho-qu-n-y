@@ -26,6 +26,8 @@ import {
 import { sqliteService } from '../../db/sqlite-service';
 import { CoQuan, DonViCap1, DonViCap2 } from '../../types';
 import { formatDonViCanBo } from '../../utils/formatDonVi';
+import { formatDateToVN } from '../../utils/dateFormat';
+import { DateInput } from '../common/DateInput';
 
 type TimeframeType = 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom';
 type TabType = 'chi_phi_can_bo' | 'thanh_toan_danh_muc';
@@ -299,14 +301,7 @@ export const Reports: React.FC = () => {
         const theBHYT = row.ma_the_bhyt || row.the_bhyt || '';
         const chanDoan = row.chan_doan || '';
         const donVi = formatDonViCanBo(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi);
-        
-        let formattedDate = row.ngay_kham || '';
-        if (formattedDate.includes('-')) {
-          const parts = formattedDate.split('-');
-          if (parts.length === 3) {
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          }
-        }
+        const formattedDate = formatDateToVN(row.ngay_kham);
 
         return [
           idx + 1,
@@ -547,14 +542,13 @@ export const Reports: React.FC = () => {
               <label className="block text-[11px] font-bold text-slate-500 mb-1">
                 Từ Ngày:
               </label>
-              <input
-                type="date"
+              <DateInput
                 value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
+                onChange={(val) => {
+                  setFromDate(val);
                   setTimeframe('custom');
                 }}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                className="bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500"
               />
             </div>
 
@@ -562,14 +556,13 @@ export const Reports: React.FC = () => {
               <label className="block text-[11px] font-bold text-slate-500 mb-1">
                 Đến Ngày:
               </label>
-              <input
-                type="date"
+              <DateInput
                 value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
+                onChange={(val) => {
+                  setToDate(val);
                   setTimeframe('custom');
                 }}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                className="bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500"
               />
             </div>
           </div>
@@ -857,7 +850,7 @@ export const Reports: React.FC = () => {
                                     </div>
                                   </td>
                                   <td className="py-3 px-3 text-center font-mono text-slate-600 font-medium">
-                                    {row.ngay_kham}
+                                    {formatDateToVN(row.ngay_kham)}
                                   </td>
                                   <td className="py-3 px-4">
                                     <div className="font-semibold text-slate-800">
@@ -1251,12 +1244,12 @@ export const Reports: React.FC = () => {
                     <td className="text-center font-mono font-bold">{row.ma_ho_so}</td>
                     <td className="text-center font-mono">{row.id_nhan_su ? `CB-${String(row.id_nhan_su).padStart(4, '0')}` : '---'}</td>
                     <td className="font-bold">{row.ten_nhan_su}</td>
-                    <td className="text-center font-mono">{row.ngay_sinh_nhan_su || row.ngay_sinh || '---'}</td>
+                    <td className="text-center font-mono">{formatDateToVN(row.ngay_sinh_nhan_su || row.ngay_sinh) || '---'}</td>
                     <td className="text-center">{row.gioi_tinh_nhan_su || row.gioi_tinh || '---'}</td>
                     <td className="text-center font-mono">{row.ma_the_bhyt || '---'}</td>
                     <td>{[row.cap_bac_nhan_su, row.chuc_vu_nhan_su].filter(Boolean).join(' - ') || '---'}</td>
-                    <td>{row.ten_don_vi_cap_2 || row.ten_don_vi || '---'}</td>
-                    <td className="text-center font-mono">{row.ngay_kham}</td>
+                    <td>{formatDonViCanBo(row.ten_don_vi_cap_1, row.ten_don_vi_cap_2 || row.ten_don_vi) || '---'}</td>
+                    <td className="text-center font-mono">{formatDateToVN(row.ngay_kham)}</td>
                     <td>{row.chan_doan}</td>
                     <td>{row.ten_bac_si}</td>
                     <td className="text-right font-bold font-mono">{formatVND(row.tong_chi_phi)}</td>

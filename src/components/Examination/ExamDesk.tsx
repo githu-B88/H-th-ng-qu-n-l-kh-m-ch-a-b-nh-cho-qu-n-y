@@ -12,6 +12,8 @@ import {
 } from '../../types';
 import { sqliteService } from '../../db/sqlite-service';
 import { formatDonViCanBo } from '../../utils/formatDonVi';
+import { formatDateToVN } from '../../utils/dateFormat';
+import { DateInput } from '../common/DateInput';
 import {
   User,
   Activity,
@@ -671,7 +673,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                           <div className="font-semibold text-sm text-slate-800">
                             {patient.ho_ten}{' '}
                             <span className="text-xs font-normal text-slate-500">
-                              ({patient.gioi_tinh}, {patient.ngay_sinh ? `${new Date(patient.ngay_sinh).getFullYear()}` : '---'})
+                              ({patient.gioi_tinh}, {formatDateToVN(patient.ngay_sinh) || '---'})
                             </span>
                           </div>
                           <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
@@ -730,7 +732,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-slate-600 pt-1 border-t border-sky-200/60">
-                  <div>Ngày sinh: <strong className="text-slate-800">{selectedPatient.ngay_sinh || '---'}</strong></div>
+                  <div>Ngày sinh: <strong className="text-slate-800">{formatDateToVN(selectedPatient.ngay_sinh) || '---'}</strong></div>
                   <div>Giới tính: <strong className="text-slate-800">{selectedPatient.gioi_tinh}</strong></div>
                   
                 </div>
@@ -922,12 +924,11 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
                   <label className="block font-semibold text-slate-700 mb-1">
                     Ngày khám <span className="text-rose-500">*</span>
                   </label>
-                  <input
+                  <DateInput
                     id="exam-date"
-                    type="date"
                     value={ngayKham}
-                    onChange={(e) => setNgayKham(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:bg-white"
+                    onChange={(val) => setNgayKham(val)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus-within:bg-white focus-within:border-sky-500"
                   />
                 </div>
 
@@ -1309,11 +1310,10 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-semibold text-slate-700 mb-1">Ngày sinh</label>
-              <input
-                type="date"
+              <DateInput
                 value={newPatient.ngay_sinh || ''}
-                onChange={(e) => setNewPatient({ ...newPatient, ngay_sinh: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                onChange={(val) => setNewPatient({ ...newPatient, ngay_sinh: val })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg focus-within:bg-white focus-within:border-sky-500"
               />
             </div>
             <div>
@@ -1439,20 +1439,18 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
               </div>
               <div>
                 <label className="block font-semibold text-slate-700 mb-1 text-[11px]">Từ ngày</label>
-                <input
-                  type="date"
+                <DateInput
                   value={newPatient.tu_ngay || ''}
-                  onChange={(e) => setNewPatient({ ...newPatient, tu_ngay: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                  onChange={(val) => setNewPatient({ ...newPatient, tu_ngay: val })}
+                  className="w-full bg-white border border-slate-200 rounded-lg focus-within:border-emerald-500"
                 />
               </div>
               <div>
                 <label className="block font-semibold text-slate-700 mb-1 text-[11px]">Đến ngày</label>
-                <input
-                  type="date"
+                <DateInput
                   value={newPatient.den_ngay || ''}
-                  onChange={(e) => setNewPatient({ ...newPatient, den_ngay: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                  onChange={(val) => setNewPatient({ ...newPatient, den_ngay: val })}
+                  className="w-full bg-white border border-slate-200 rounded-lg focus-within:border-emerald-500"
                 />
               </div>
             </div>
