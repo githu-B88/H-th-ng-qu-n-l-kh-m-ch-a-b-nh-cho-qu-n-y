@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
+import { playCreateSound, playUpdateSound, playDeleteSound } from '../../utils/soundEffects';
 
 export const DoctorManager: React.FC = () => {
   const [bacSiList, setBacSiList] = useState<BacSi[]>([]);
@@ -63,11 +64,14 @@ export const DoctorManager: React.FC = () => {
     if (!editingDoctor.ho_ten?.trim()) return;
 
     try {
+      const isEdit = Boolean(editingDoctor.id);
       const res = sqliteService.saveBacSi(editingDoctor);
       if (res && !res.success) {
         alert(res.error || 'Không thể lưu bác sĩ. Vui lòng kiểm tra lại thông tin.');
         return;
       }
+      if (isEdit) playUpdateSound();
+      else playCreateSound();
       setIsModalOpen(false);
       loadData();
     } catch (err: any) {
@@ -88,6 +92,7 @@ export const DoctorManager: React.FC = () => {
         alert(res.error || 'Không thể xóa bác sĩ!');
         return;
       }
+      playDeleteSound();
       loadData();
     }
   };

@@ -334,6 +334,10 @@ class SqliteService {
           WHERE id_don_vi_cap_1 IS NULL AND id_don_vi_cap_2 IS NOT NULL;
         `);
       } catch {}
+      try {
+        originalRun("UPDATE nguoi_dung SET ten_dang_nhap = 'ban_quan_y_V5', mat_khau = 'Giang$9999', ho_ten = 'Ban Quân Y Vùng 5 Hải Quân' WHERE ten_dang_nhap = 'ban_quan_y' OR id = 1;");
+        originalRun("UPDATE nguoi_dung SET mat_khau = 'Giang$9999' WHERE ten_dang_nhap = 'admin';");
+      } catch {}
 
       this.isInitialized = true;
       this.notify();

@@ -125,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <h1 className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5 leading-snug">
-            Quản Lý Quân Y
+            Quản Lý Quân Y Vùng 5
           </h1>
           <p className="text-[10px] text-emerald-400 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>

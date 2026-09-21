@@ -389,7 +389,15 @@ CREATE INDEX IF NOT EXISTS idx_ho_so_chi_tiet_hoso ON ho_so_kham_chi_tiet(id_ho_
       insertNd.run(u.id, u.ten_dang_nhap, u.mat_khau, u.ho_ten, u.vai_tro || 'admin', u.id_bac_si || null, u.trang_thai ?? 1);
     }
     // Also ensure admin alias exists
-    insertNd.run(2, 'admin', 'Giang@9999', 'Quản trị viên', 'admin', 1, 1);
+    insertNd.run(2, 'admin', 'Giang$9999', 'Quản trị viên', 'admin', 1, 1);
+  }
+
+  // Ensure ban_quan_y_V5 credentials are up to date
+  try {
+    db.prepare(`UPDATE nguoi_dung SET ten_dang_nhap = 'ban_quan_y_V5', mat_khau = 'Giang$9999', ho_ten = 'Ban Quân Y Vùng 5 Hải Quân' WHERE ten_dang_nhap = 'ban_quan_y' OR id = 1`).run();
+    db.prepare(`UPDATE nguoi_dung SET mat_khau = 'Giang$9999' WHERE ten_dang_nhap = 'admin'`).run();
+  } catch (err) {
+    console.error("Migration error updating nguoi_dung credentials:", err);
   }
 
   // 6. Check and seed Catalog items (thuoc, vat_tu, dich_vu_kt)

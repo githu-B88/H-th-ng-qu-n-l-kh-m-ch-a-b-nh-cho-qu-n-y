@@ -20,6 +20,7 @@ import {
   Trash2,
   Building2
 } from 'lucide-react';
+import { playExportSound } from '../../utils/soundEffects';
 
 export const DatabaseSettings: React.FC = () => {
   const [sqlQuery, setSqlQuery] = useState<string>('SELECT * FROM ho_so_kham ORDER BY id DESC LIMIT 10;');
@@ -33,10 +34,12 @@ export const DatabaseSettings: React.FC = () => {
 
   const handleExportBinary = () => {
     sqliteService.exportBinaryDatabase();
+    playExportSound();
   };
 
   const handleExportJSON = () => {
     sqliteService.exportJSONDatabase();
+    playExportSound();
   };
 
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {

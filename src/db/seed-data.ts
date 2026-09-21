@@ -462,9 +462,9 @@ export const SEED_MAU_BENH: MauBenh[] = [
 export const SEED_NGUOI_DUNG = [
   {
     id: 1,
-    ten_dang_nhap: 'ban_quan_y',
-    mat_khau: 'Giang@9999',
-    ho_ten: 'Ban Quân Y',
+    ten_dang_nhap: 'ban_quan_y_V5',
+    mat_khau: 'Giang$9999',
+    ho_ten: 'Ban Quân Y Vùng 5 Hải Quân',
     vai_tro: 'admin' as const,
     id_bac_si: 1,
     trang_thai: 1
@@ -472,7 +472,7 @@ export const SEED_NGUOI_DUNG = [
   {
     id: 2,
     ten_dang_nhap: 'admin',
-    mat_khau: 'Giang@9999',
+    mat_khau: 'Giang$9999',
     ho_ten: 'Quản trị viên',
     vai_tro: 'admin' as const,
     id_bac_si: 1,

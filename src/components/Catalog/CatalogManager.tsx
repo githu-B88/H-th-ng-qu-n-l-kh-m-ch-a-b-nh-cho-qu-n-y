@@ -19,6 +19,12 @@ import {
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
 import { forceResetAndSeedData, seedMedicalData, listThuoc as defaultListThuoc, listVatTu as defaultListVatTu, listDichVu as defaultListDichVu } from '../../db/seedMedicalData';
+import {
+  playCreateSound,
+  playUpdateSound,
+  playDeleteSound,
+  playSuccessSound
+} from '../../utils/soundEffects';
 
 export const CatalogManager: React.FC = () => {
   const [activeCatalogTab, setActiveCatalogTab] = useState<'thuoc' | 'vat_tu' | 'dich_vu' | 'co_quan'>('thuoc');
@@ -84,7 +90,10 @@ export const CatalogManager: React.FC = () => {
   const handleSaveThuoc = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingThuoc.ten?.trim()) return;
+    const isEdit = Boolean(editingThuoc.id);
     sqliteService.saveThuoc(editingThuoc);
+    if (isEdit) playUpdateSound();
+    else playCreateSound();
     setIsThuocModalOpen(false);
     loadData();
   };
@@ -92,6 +101,7 @@ export const CatalogManager: React.FC = () => {
   const handleDeleteThuoc = (id: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa thuốc này khỏi danh mục?')) {
       sqliteService.deleteThuoc(id);
+      playDeleteSound();
       loadData();
     }
   };
@@ -100,7 +110,10 @@ export const CatalogManager: React.FC = () => {
   const handleSaveVatTu = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingVatTu.ten?.trim()) return;
+    const isEdit = Boolean(editingVatTu.id);
     sqliteService.saveVatTu(editingVatTu);
+    if (isEdit) playUpdateSound();
+    else playCreateSound();
     setIsVatTuModalOpen(false);
     loadData();
   };
@@ -108,6 +121,7 @@ export const CatalogManager: React.FC = () => {
   const handleDeleteVatTu = (id: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa vật tư này?')) {
       sqliteService.deleteVatTu(id);
+      playDeleteSound();
       loadData();
     }
   };
@@ -116,7 +130,10 @@ export const CatalogManager: React.FC = () => {
   const handleSaveDichVu = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDichVu.ten?.trim()) return;
+    const isEdit = Boolean(editingDichVu.id);
     sqliteService.saveDichVuKT(editingDichVu);
+    if (isEdit) playUpdateSound();
+    else playCreateSound();
     setIsDichVuModalOpen(false);
     loadData();
   };
@@ -124,6 +141,7 @@ export const CatalogManager: React.FC = () => {
   const handleDeleteDichVu = (id: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa dịch vụ kỹ thuật này?')) {
       sqliteService.deleteDichVuKT(id);
+      playDeleteSound();
       loadData();
     }
   };
@@ -132,7 +150,10 @@ export const CatalogManager: React.FC = () => {
   const handleSaveDonViCap1 = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDonViCap1.ten?.trim()) return;
+    const isEdit = Boolean(editingDonViCap1.id);
     (sqliteService as any).saveDonViCap1(editingDonViCap1);
+    if (isEdit) playUpdateSound();
+    else playCreateSound();
     setIsDonViCap1ModalOpen(false);
     loadData();
   };
@@ -146,6 +167,7 @@ export const CatalogManager: React.FC = () => {
       )
     ) {
       (sqliteService as any).deleteDonViCap1(id);
+      playDeleteSound();
       if (selectedCap1Filter === id) setSelectedCap1Filter('all');
       loadData();
     }
@@ -154,7 +176,10 @@ export const CatalogManager: React.FC = () => {
   const handleSaveCoQuan = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCoQuan.ten_co_quan?.trim()) return;
+    const isEdit = Boolean(editingCoQuan.id);
     sqliteService.saveCoQuan(editingCoQuan);
+    if (isEdit) playUpdateSound();
+    else playCreateSound();
     setIsCoQuanModalOpen(false);
     loadData();
   };
@@ -162,6 +187,7 @@ export const CatalogManager: React.FC = () => {
   const handleDeleteCoQuan = (id: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa cơ quan/phòng ban này?')) {
       sqliteService.deleteCoQuan(id);
+      playDeleteSound();
       loadData();
     }
   };
@@ -175,6 +201,7 @@ export const CatalogManager: React.FC = () => {
     try {
       const res = forceResetAndSeedData();
       if (res.success) {
+        playSuccessSound();
         setSeedMessage(res.message);
         setListThuoc(res.listThuoc);
         setListVatTu(res.listVatTu);

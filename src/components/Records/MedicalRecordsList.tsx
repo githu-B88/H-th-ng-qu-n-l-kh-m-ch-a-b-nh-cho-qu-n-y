@@ -24,6 +24,7 @@ import {
 import { exportBangKeToDocx } from '../../utils/exportBangKeDocx';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
+import { playDeleteSound, playExportSound } from '../../utils/soundEffects';
 
 interface MedicalRecordsListProps {
   onPrintRecord: (record: HoSoKham) => void;
@@ -127,6 +128,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
       const fullRecords = await fetchBatchRecords();
       if (fullRecords && fullRecords.length > 0) {
         await exportBangKeToDocx(fullRecords);
+        playExportSound();
       }
     } catch (err) {
       console.error(err);
@@ -210,6 +212,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
     try {
       const success = sqliteService.deleteHoSoKham(recordToDelete.id);
       if (success) {
+        playDeleteSound();
         setFeedback({
           type: 'success',
           text: `Đã xóa thành công phiếu khám ${recordToDelete.ma_ho_so} của bệnh nhân ${recordToDelete.ten_nhan_su}!`
@@ -242,6 +245,7 @@ export const MedicalRecordsList: React.FC<MedicalRecordsListProps> = ({
     try {
       const result = sqliteService.clearExamRecords();
       if (result.success) {
+        playDeleteSound();
         setFeedback({
           type: 'success',
           text: result.message

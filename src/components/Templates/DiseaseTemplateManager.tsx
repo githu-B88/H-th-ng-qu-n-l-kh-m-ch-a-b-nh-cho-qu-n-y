@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
+import { playCreateSound, playUpdateSound, playDeleteSound } from '../../utils/soundEffects';
 
 export const DiseaseTemplateManager: React.FC = () => {
   const [templates, setTemplates] = useState<MauBenh[]>([]);
@@ -202,6 +203,7 @@ export const DiseaseTemplateManager: React.FC = () => {
     const tenBenh = editingTemplate.ten_benh?.trim();
     if (!tenBenh) return;
 
+    const isEdit = Boolean(editingTemplate.id);
     const finalChanDoan = editingTemplate.chan_doan_chuan?.trim() || tenBenh;
     sqliteService.saveMauBenh(
       {
@@ -211,6 +213,8 @@ export const DiseaseTemplateManager: React.FC = () => {
       },
       templateDetails
     );
+    if (isEdit) playUpdateSound();
+    else playCreateSound();
     setIsModalOpen(false);
     loadData();
   };
@@ -218,6 +222,7 @@ export const DiseaseTemplateManager: React.FC = () => {
   const handleDeleteTemplate = (id: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa mẫu bệnh này?')) {
       sqliteService.deleteMauBenh(id);
+      playDeleteSound();
       loadData();
     }
   };

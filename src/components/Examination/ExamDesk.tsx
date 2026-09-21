@@ -44,6 +44,7 @@ import { exportBangKeToDocx } from '../../utils/exportBangKeDocx';
 import { isThamMuuDoctor, isPhongVung } from '../../utils/formatDonVi';
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
+import { playCreateSound } from '../../utils/soundEffects';
 
 interface ExamDeskProps {
   bacSiList?: BacSi[];
@@ -462,6 +463,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
     }
 
     if (savedId) {
+      playCreateSound();
       const fullRecord = sqliteService.getHoSoKhamById(savedId);
       setFeedbackMessage({
         type: 'success',
@@ -523,6 +525,7 @@ export const ExamDesk: React.FC<ExamDeskProps> = ({
 
     const newId = sqliteService.saveNhanSu(payload);
     if (newId) {
+      playCreateSound();
       await sqliteService.persistDatabase();
       loadMasterData();
       setSelectedPatientId(newId);

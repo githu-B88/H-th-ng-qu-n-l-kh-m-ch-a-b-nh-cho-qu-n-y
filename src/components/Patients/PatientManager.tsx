@@ -26,6 +26,12 @@ import {
 import { exportBangKeToDocx } from '../../utils/exportBangKeDocx';
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
+import {
+  playCreateSound,
+  playUpdateSound,
+  playDeleteSound,
+  playExportSound
+} from '../../utils/soundEffects';
 
 interface PatientManagerProps {
   onStartExamForPatient: (patientId: number) => void;
@@ -92,8 +98,14 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
 
   const handleSavePatient = async (e: React.FormEvent) => {
     e.preventDefault();
+    const isEdit = Boolean(editingPatient.id);
     const savedId = sqliteService.saveNhanSu(editingPatient);
     if (savedId) {
+      if (isEdit) {
+        playUpdateSound();
+      } else {
+        playCreateSound();
+      }
       await sqliteService.persistDatabase();
       setIsModalOpen(false);
       loadData();
@@ -141,6 +153,7 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
     if (window.confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa cán bộ này? Toàn bộ lịch sử khám bệnh của cán bộ này cũng sẽ bị xóa vĩnh viễn. Không thể khôi phục.')) {
       const res = (sqliteService as any).deletePatient(id);
       if (res.success) {
+        playDeleteSound();
         alert(res.message);
         loadData();
       } else {
@@ -166,6 +179,7 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "CanBo");
     XLSX.writeFile(wb, "Mau_Import_Can_Bo.xlsx");
+    playExportSound();
   };
 
   const parseDateToYMD = (dateStr?: string) => {
@@ -276,6 +290,9 @@ export const PatientManager: React.FC<PatientManagerProps> = ({
       }
 
       await (sqliteService as any).persistDatabase?.() || await Promise.resolve();
+      if (successCount > 0) {
+        playCreateSound();
+      }
       alert(`Nhập thành công ${successCount} cán bộ!`);
       loadData();
       

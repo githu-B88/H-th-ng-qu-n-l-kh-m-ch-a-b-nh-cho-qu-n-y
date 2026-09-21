@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
+import { playExportSound } from '../../utils/soundEffects';
 import {
   FileSpreadsheet,
   Calendar,
@@ -384,6 +385,7 @@ export const Reports: React.FC = () => {
         ? `Bao_Cao_Chi_Phi_Kham_Can_Bo_${dateStr}.xlsx`
         : `Bao_Cao_Thanh_Toan_Thuoc_Vat_Tu_${dateStr}.xlsx`;
     XLSX.writeFile(wb, fileName);
+    playExportSound();
   };
 
   const handlePrint = () => {

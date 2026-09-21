@@ -7,8 +7,7 @@ import {
   EyeOff,
   Stethoscope,
   AlertCircle,
-  HardDrive,
-  KeyRound
+  HardDrive
 } from 'lucide-react';
 import { sqliteService } from '../../db/sqlite-service';
 import { NguoiDung } from '../../types';
@@ -18,8 +17,8 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  const [tenDangNhap, setTenDangNhap] = useState('ban_quan_y');
-  const [matKhau, setMatKhau] = useState('Giang@9999');
+  const [tenDangNhap, setTenDangNhap] = useState('');
+  const [matKhau, setMatKhau] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,12 +54,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     }, 200);
   };
 
-  const handleFillAdmin = () => {
-    setTenDangNhap('ban_quan_y');
-    setMatKhau('Giang@9999');
-    setErrorMsg(null);
-  };
-
   return (
     <div className="min-h-screen w-full bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans select-none">
       {/* Background Subtle Gradient & Grid */}
@@ -89,7 +82,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         {/* Form Body */}
         <div className="p-6 sm:p-8 space-y-5">
           <div className="text-center">
-            <h2 className="text-base font-bold text-slate-800">Đăng Nhập Ban Quân Y</h2>
+            <h2 className="text-base font-bold text-slate-800">Đăng Nhập Ban Quân Y Vùng 5 Hải Quân</h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Xác thực quyền quản trị để truy cập dữ liệu y tế đơn vị
             </p>
@@ -118,7 +111,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   type="text"
                   value={tenDangNhap}
                   onChange={(e) => setTenDangNhap(e.target.value)}
-                  placeholder="Nhập tài khoản ban_quan_y..."
+                  placeholder="Tài khoản"
                   className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all font-medium"
                   autoFocus
                 />
@@ -139,7 +132,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={matKhau}
                   onChange={(e) => setMatKhau(e.target.value)}
-                  placeholder="Nhập mật khẩu..."
+                  placeholder="Mật khẩu"
                   className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all font-medium"
                 />
                 <button
@@ -173,35 +166,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               )}
             </button>
           </form>
-
-          {/* Single Admin Account Info / Quick fill */}
-          <div className="pt-3 border-t border-slate-100">
-            <div
-              onClick={handleFillAdmin}
-              className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/80 hover:bg-emerald-100/70 transition-all cursor-pointer flex items-center justify-between"
-              title="Click để tự động điền tài khoản Ban Quân y"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-xs">
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                    <span>Tài khoản Quản trị:</span>
-                    <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-emerald-300 text-emerald-800 text-[11px]">
-                      ban_quan_y
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-emerald-700/90 mt-0.5 font-medium">
-                    Mật khẩu: <span className="font-mono font-semibold">Giang@9999</span>
-                  </div>
-                </div>
-              </div>
-              <span className="text-[10px] font-semibold text-emerald-700 bg-white px-2 py-1 rounded-md border border-emerald-200 shadow-2xs">
-                Admin
-              </span>
-            </div>
-          </div>
 
           {/* Security Notice */}
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-2 text-[11px] text-slate-600">
